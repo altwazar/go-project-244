@@ -1,10 +1,13 @@
 package main
 
 import (
+	"code"
 	"context"
-	"github.com/urfave/cli/v3"
+	"fmt"
 	"log"
 	"os"
+
+	"github.com/urfave/cli/v3"
 )
 
 func main() {
@@ -21,6 +24,26 @@ func main() {
 				Value:       "stylish",
 				Destination: &format,
 			},
+		},
+		Action: func(ctx context.Context, cmd *cli.Command) error {
+			// Нужен один аргумент - путь
+			if cmd.NArg() != 2 {
+				err := cli.ShowAppHelp(cmd)
+
+				if err != nil {
+					log.Fatal(err)
+				}
+				return cli.Exit("Error: requires two argumenst - path1 and path2 to files", 1)
+			}
+
+			pathBefore := cmd.Args().Get(0)
+			pathAfter := cmd.Args().Get(1)
+			out, err := code.CompareConfigs(pathBefore, pathAfter, format)
+			if err != nil {
+				log.Fatal(err)
+			}
+			fmt.Println(out)
+			return nil
 		},
 	}
 
