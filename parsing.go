@@ -38,18 +38,27 @@ func CompareConfigs(pathBefore string, pathAfter string, format string) (string,
 	all = append(all, both...)
 	// Отсортированные ключи из двух карт
 	slices.Sort(all)
+	spacing := "  "
 	for _, key := range both {
 		if reflect.DeepEqual(mapBefore[key], mapAfter[key]) {
-			outMap[key] = fmt.Sprintf("\t  %s: %v\n", key, mapBefore[key])
+			outMap[key] = fmt.Sprintf("%s  %s: %v\n", spacing, key, mapBefore[key])
 		} else {
-			outMap[key] = fmt.Sprintf("\t- %s: %v\n\t+ %s: %v\n", key, mapBefore[key], key, mapAfter[key])
+			outMap[key] = fmt.Sprintf(
+				"%s- %s: %v\n%s+ %s: %v\n",
+				spacing,
+				key,
+				mapBefore[key],
+				spacing,
+				key,
+				mapAfter[key],
+			)
 		}
 	}
 	for _, key := range onlyBefore {
-		outMap[key] = fmt.Sprintf("\t- %s: %v\n", key, mapBefore[key])
+		outMap[key] = fmt.Sprintf("%s- %s: %v\n", spacing, key, mapBefore[key])
 	}
 	for _, key := range onlyAfter {
-		outMap[key] = fmt.Sprintf("\t+ %s: %v\n", key, mapAfter[key])
+		outMap[key] = fmt.Sprintf("%s+ %s: %v\n", spacing, key, mapAfter[key])
 	}
 	out += "{\n"
 	for _, key := range all {
