@@ -1,9 +1,8 @@
 package code
 
 import (
-	"encoding/json"
+	"code/parsers"
 	"fmt"
-	"os"
 	"reflect"
 	"slices"
 	"strings"
@@ -87,31 +86,20 @@ func diffKeys(a map[string]any, b map[string]any) (keysAOnly, keysBOnly, keysBot
 func parseConfig(path string) (any, error) {
 	var cnf any
 	if strings.HasSuffix(path, ".json") {
-		err := parseJsonConfig(path, &cnf)
+		err := parsers.ParseJsonConfig(path, &cnf)
 		if err != nil {
 			return nil, err
 		}
-
+	} else if strings.HasSuffix(path, ".yml") {
+		err := parsers.ParseYamlConfig(path, &cnf)
+		if err != nil {
+			return nil, err
+		}
 	} else {
 		err := fmt.Errorf("unknown file format %s", path)
 		return nil, err
 	}
 	return cnf, nil
-}
-
-func parseJsonConfig(path string, cnf *any) error {
-	f, err := os.Open(path)
-	if err != nil {
-		return fmt.Errorf("open: %w", err)
-	}
-	defer f.Close()
-
-	dec := json.NewDecoder(f)
-	dec.UseNumber()
-	if err := dec.Decode(&cnf); err != nil {
-		return fmt.Errorf("decode: %w", err)
-	}
-	return nil
 }
 
 // Вывод содержимого конфига
