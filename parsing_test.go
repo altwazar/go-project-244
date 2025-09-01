@@ -51,6 +51,38 @@ func TestCompareConfigs(t *testing.T) {
 			format:     "stylish",
 			expErr:     nil,
 		},
+		{
+			name:       "Two flat ymls 1 to 2 stylish",
+			file1:      filepath.Join("testdata", "fixtures", "flatyml", "file1.yml"),
+			file2:      filepath.Join("testdata", "fixtures", "flatyml", "file2.yml"),
+			expOutPath: filepath.Join("testdata", "fixtures", "flatyml", "1to2expected.golden"),
+			format:     "stylish",
+			expErr:     nil,
+		},
+		{
+			name:       "Two flat ymls 2 to 1 stylish",
+			file1:      filepath.Join("testdata", "fixtures", "flatyml", "file2.yml"),
+			file2:      filepath.Join("testdata", "fixtures", "flatyml", "file1.yml"),
+			expOutPath: filepath.Join("testdata", "fixtures", "flatyml", "2to1expected.golden"),
+			format:     "stylish",
+			expErr:     nil,
+		},
+		{
+			name:       "Two flat ymls 1 to 1 stylish",
+			file1:      filepath.Join("testdata", "fixtures", "flatyml", "file1.yml"),
+			file2:      filepath.Join("testdata", "fixtures", "flatyml", "file1.yml"),
+			expOutPath: filepath.Join("testdata", "fixtures", "flatyml", "1to1expected.golden"),
+			format:     "stylish",
+			expErr:     nil,
+		},
+		{
+			name:       "Two flat ymls 2 to 2 stylish",
+			file1:      filepath.Join("testdata", "fixtures", "flatyml", "file2.yml"),
+			file2:      filepath.Join("testdata", "fixtures", "flatyml", "file2.yml"),
+			expOutPath: filepath.Join("testdata", "fixtures", "flatyml", "2to2expected.golden"),
+			format:     "stylish",
+			expErr:     nil,
+		},
 	}
 
 	for _, c := range cases {
