@@ -30,35 +30,36 @@ func CompareConfigs(pathBefore string, pathAfter string, format string) (string,
 	}
 	// Карта для форматированного вывода по ключам
 	outMap := make(map[string]string)
-	onlyBefore, onlyAfter, both := diffKeys(mapBefore, mapAfter)
-	all := make([]string, 0, len(onlyAfter)+len(onlyBefore)+len(both))
-	all = append(all, onlyAfter...)
-	all = append(all, onlyBefore...)
-	all = append(all, both...)
-	// Отсортированные ключи из двух карт
-	slices.Sort(all)
+	keysRemoved, keysAdded, keysEqual, keysUpdated := diffKeys(mapBefore, mapAfter)
 	spacing := "  "
-	for _, key := range both {
-		if reflect.DeepEqual(mapBefore[key], mapAfter[key]) {
-			outMap[key] = fmt.Sprintf("%s  %s: %v\n", spacing, key, mapBefore[key])
-		} else {
-			outMap[key] = fmt.Sprintf(
-				"%s- %s: %v\n%s+ %s: %v\n",
-				spacing,
-				key,
-				mapBefore[key],
-				spacing,
-				key,
-				mapAfter[key],
-			)
-		}
+	for _, key := range keysEqual {
+		outMap[key] = fmt.Sprintf("%s  %s: %v\n", spacing, key, mapBefore[key])
 	}
-	for _, key := range onlyBefore {
+	for _, key := range keysUpdated {
+		outMap[key] = fmt.Sprintf(
+			"%s- %s: %v\n%s+ %s: %v\n",
+			spacing,
+			key,
+			mapBefore[key],
+			spacing,
+			key,
+			mapAfter[key],
+		)
+	}
+	for _, key := range keysRemoved {
 		outMap[key] = fmt.Sprintf("%s- %s: %v\n", spacing, key, mapBefore[key])
 	}
-	for _, key := range onlyAfter {
+	for _, key := range keysAdded {
 		outMap[key] = fmt.Sprintf("%s+ %s: %v\n", spacing, key, mapAfter[key])
 	}
+
+	all := make([]string, 0, len(keysAdded)+len(keysRemoved)+len(keysEqual)+len(keysUpdated))
+	all = append(all, keysAdded...)
+	all = append(all, keysRemoved...)
+	all = append(all, keysEqual...)
+	all = append(all, keysUpdated...)
+	// Отсортированные ключи из двух карт
+	slices.Sort(all)
 	out += "{\n"
 	for _, key := range all {
 		out += outMap[key]
@@ -67,17 +68,21 @@ func CompareConfigs(pathBefore string, pathAfter string, format string) (string,
 	return out, nil
 }
 
-func diffKeys(a map[string]any, b map[string]any) (keysAOnly, keysBOnly, keysBoth []string) {
+func diffKeys(a map[string]any, b map[string]any) (keysRemoved, keysAdded, keysEqual, keysUpdated []string) {
 	for k := range a {
 		if _, ok := b[k]; ok {
-			keysBoth = append(keysBoth, k)
+			if reflect.DeepEqual(a[k], b[k]) {
+				keysEqual = append(keysEqual, k)
+			} else {
+				keysUpdated = append(keysUpdated, k)
+			}
 		} else {
-			keysAOnly = append(keysAOnly, k)
+			keysRemoved = append(keysRemoved, k)
 		}
 	}
 	for k := range b {
 		if _, ok := a[k]; !ok {
-			keysBOnly = append(keysBOnly, k)
+			keysAdded = append(keysAdded, k)
 		}
 	}
 	return
