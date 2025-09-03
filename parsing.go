@@ -8,6 +8,11 @@ import (
 	"strings"
 )
 
+type pair struct {
+	First  any
+	Second any
+}
+
 func CompareConfigs(pathBefore string, pathAfter string, format string) (string, error) {
 	var out string
 	cfgBefore, err := parseConfig(pathBefore)
@@ -32,10 +37,10 @@ func CompareConfigs(pathBefore string, pathAfter string, format string) (string,
 	outMap := make(map[string]string)
 	keysRemoved, keysAdded, keysEqual, keysUpdated := diffKeys(mapBefore, mapAfter)
 	spacing := "  "
-	for _, key := range keysEqual {
+	for key := range keysEqual {
 		outMap[key] = fmt.Sprintf("%s  %s: %v\n", spacing, key, mapBefore[key])
 	}
-	for _, key := range keysUpdated {
+	for key := range keysUpdated {
 		outMap[key] = fmt.Sprintf(
 			"%s- %s: %v\n%s+ %s: %v\n",
 			spacing,
@@ -46,18 +51,26 @@ func CompareConfigs(pathBefore string, pathAfter string, format string) (string,
 			mapAfter[key],
 		)
 	}
-	for _, key := range keysRemoved {
+	for key := range keysRemoved {
 		outMap[key] = fmt.Sprintf("%s- %s: %v\n", spacing, key, mapBefore[key])
 	}
-	for _, key := range keysAdded {
+	for key := range keysAdded {
 		outMap[key] = fmt.Sprintf("%s+ %s: %v\n", spacing, key, mapAfter[key])
 	}
 
 	all := make([]string, 0, len(keysAdded)+len(keysRemoved)+len(keysEqual)+len(keysUpdated))
-	all = append(all, keysAdded...)
-	all = append(all, keysRemoved...)
-	all = append(all, keysEqual...)
-	all = append(all, keysUpdated...)
+	for key := range keysAdded {
+		all = append(all, key)
+	}
+	for key := range keysRemoved {
+		all = append(all, key)
+	}
+	for key := range keysEqual {
+		all = append(all, key)
+	}
+	for key := range keysUpdated {
+		all = append(all, key)
+	}
 	// Отсортированные ключи из двух карт
 	slices.Sort(all)
 	out += "{\n"
@@ -68,24 +81,36 @@ func CompareConfigs(pathBefore string, pathAfter string, format string) (string,
 	return out, nil
 }
 
-func diffKeys(a map[string]any, b map[string]any) (keysRemoved, keysAdded, keysEqual, keysUpdated []string) {
+func diffKeys(a map[string]any, b map[string]any) (
+	map[string]any,
+	map[string]any,
+	map[string]any,
+	map[string]pair,
+) {
+	keysRemoved := make(map[string]any)
+	keysAdded := make(map[string]any)
+	keysEqual := make(map[string]any)
+	keysUpdated := make(map[string]pair)
 	for k := range a {
 		if _, ok := b[k]; ok {
 			if reflect.DeepEqual(a[k], b[k]) {
-				keysEqual = append(keysEqual, k)
+				keysEqual[k] = a[k]
 			} else {
-				keysUpdated = append(keysUpdated, k)
+				keysUpdated[k] = pair{
+					First:  a[k],
+					Second: b[k],
+				}
 			}
 		} else {
-			keysRemoved = append(keysRemoved, k)
+			keysRemoved[k] = a[k]
 		}
 	}
 	for k := range b {
 		if _, ok := a[k]; !ok {
-			keysAdded = append(keysAdded, k)
+			keysAdded[k] = b[k]
 		}
 	}
-	return
+	return keysRemoved, keysAdded, keysEqual, keysUpdated
 }
 
 func parseConfig(path string) (any, error) {
