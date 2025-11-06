@@ -33,29 +33,86 @@ func CompareConfigs(pathBefore string, pathAfter string, format string) (string,
 		err := fmt.Errorf("something wrong with config %s", pathAfter)
 		return "", err
 	}
+	out = formatOutput(mapBefore, mapAfter, 1)
+	return out, nil
+}
+
+func formatOutput(mapBefore map[string]any, mapAfter map[string]any, identlvl int) string {
 	// Карта для форматированного вывода по ключам
+	var out string
 	outMap := make(map[string]string)
 	keysRemoved, keysAdded, keysEqual, keysUpdated := diffKeys(mapBefore, mapAfter)
-	spacing := "  "
+	spacing := strings.Repeat(" ", identlvl*4-2)
 	for key := range keysEqual {
-		outMap[key] = fmt.Sprintf("%s  %s: %v\n", spacing, key, mapBefore[key])
+		if mapVal, isMap := mapBefore[key].(map[string]any); isMap {
+			outMap[key] = fmt.Sprintf("%s  %s: %s\n",
+				spacing,
+				key,
+				formatOutput(mapVal, mapVal, identlvl+1))
+		} else {
+			outMap[key] = fmt.Sprintf("%s  %s: %v\n", spacing, key, mapBefore[key])
+		}
 	}
 	for key := range keysUpdated {
-		outMap[key] = fmt.Sprintf(
-			"%s- %s: %v\n%s+ %s: %v\n",
-			spacing,
-			key,
-			mapBefore[key],
-			spacing,
-			key,
-			mapAfter[key],
-		)
+		if beforeMap, beforeIsMap := mapBefore[key].(map[string]any); beforeIsMap {
+			if afterMap, afterIsMap := mapAfter[key].(map[string]any); afterIsMap {
+				// Оба значения - map[string]any
+				outMap[key] = fmt.Sprintf("%s  %s: %s\n",
+					spacing,
+					key,
+					formatOutput(beforeMap, afterMap, identlvl+1))
+			} else {
+				// Только before является map
+				outMap[key] = fmt.Sprintf("%s- %s: %s\n%s+  %s: %v\n",
+					spacing,
+					key,
+					formatOutput(beforeMap, beforeMap, identlvl+1),
+					spacing,
+					key,
+					mapAfter[key])
+			}
+		} else if afterMap, afterIsMap := mapAfter[key].(map[string]any); afterIsMap {
+			// Только after является map
+			// outMap[key] = formatOutput(map[string]any{"value": mapBefore[key]}, afterMap, identlvl+1)
+			outMap[key] = fmt.Sprintf("%s- %s: %v\n%s+  %s: %s\n",
+				spacing,
+				key,
+				mapBefore[key],
+				spacing,
+				key,
+				formatOutput(afterMap, afterMap, identlvl+1))
+		} else {
+			outMap[key] = fmt.Sprintf(
+				"%s- %s: %v\n%s+ %s: %v\n",
+				spacing,
+				key,
+				mapBefore[key],
+				spacing,
+				key,
+				mapAfter[key],
+			)
+		}
+
 	}
 	for key := range keysRemoved {
-		outMap[key] = fmt.Sprintf("%s- %s: %v\n", spacing, key, mapBefore[key])
+		if mapVal, isMap := mapBefore[key].(map[string]any); isMap {
+			outMap[key] = fmt.Sprintf("%s- %s: %s\n",
+				spacing,
+				key,
+				formatOutput(mapVal, mapVal, identlvl+1))
+		} else {
+			outMap[key] = fmt.Sprintf("%s- %s: %v\n", spacing, key, mapBefore[key])
+		}
 	}
 	for key := range keysAdded {
-		outMap[key] = fmt.Sprintf("%s+ %s: %v\n", spacing, key, mapAfter[key])
+		if mapVal, isMap := mapAfter[key].(map[string]any); isMap {
+			outMap[key] = fmt.Sprintf("%s+ %s: %s\n",
+				spacing,
+				key,
+				formatOutput(mapVal, mapVal, identlvl+1))
+		} else {
+			outMap[key] = fmt.Sprintf("%s+ %s: %v\n", spacing, key, mapAfter[key])
+		}
 	}
 
 	all := make([]string, 0, len(keysAdded)+len(keysRemoved)+len(keysEqual)+len(keysUpdated))
@@ -77,8 +134,8 @@ func CompareConfigs(pathBefore string, pathAfter string, format string) (string,
 	for _, key := range all {
 		out += outMap[key]
 	}
-	out += "}\n"
-	return out, nil
+	out += strings.Repeat(" ", 4*(identlvl-1)) + "}"
+	return out
 }
 
 func diffKeys(a map[string]any, b map[string]any) (
