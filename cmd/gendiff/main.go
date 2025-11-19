@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
 
 	"github.com/urfave/cli/v3"
 )
@@ -23,6 +24,7 @@ func main() {
 				Aliases:     []string{"f"},
 				Value:       "stylish",
 				Destination: &format,
+				Usage:       "Format type (stylish|plani|json)",
 			},
 		},
 		Action: func(ctx context.Context, cmd *cli.Command) error {
@@ -35,9 +37,14 @@ func main() {
 				}
 				return cli.Exit("Error: requires two argumenst - path1 and path2 to files", 1)
 			}
-
 			pathBefore := cmd.Args().Get(0)
 			pathAfter := cmd.Args().Get(1)
+			// Валидация format
+			allowedFormats := []string{"stylis", "plain", "json"}
+			if !contains(allowedFormats, format) {
+				return fmt.Errorf("invalid format '%s'. Must be one of: %s",
+					format, strings.Join(allowedFormats, ", "))
+			}
 			out, err := code.CompareConfigs(pathBefore, pathAfter, format)
 			if err != nil {
 				log.Fatal(err)
@@ -51,4 +58,13 @@ func main() {
 		log.Fatal(err)
 	}
 
+}
+
+func contains(slice []string, item string) bool {
+	for _, s := range slice {
+		if s == item {
+			return true
+		}
+	}
+	return false
 }
