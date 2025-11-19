@@ -9,6 +9,8 @@ func FormatOut(diffs []parsers.Diff, format string) string {
 		out = formatOutputStylish(diffs, 0)
 	case "plain":
 		out = formatOutputPlain(diffs, "")
+	case "json":
+		out = formatOutputJson(diffs, 0)
 	}
 	return out
 }
