@@ -39,16 +39,17 @@ func formatOutputStylish(diffs []parsers.Diff, level int) string {
 				out += fmt.Sprintf("%s  %s: %s", spacing, diff.Key, formatOutputStylish(diff.DiffChild, level+1))
 			}
 		case parsers.Updated:
-			if diff.FromTo == parsers.ValueToValue {
+			switch diff.FromTo {
+			case parsers.ValueToValue:
 				out += fmt.Sprintf("%s- %s: %s\n", spacing, diff.Key, oldKey)
 				out += fmt.Sprintf("%s+ %s: %s\n", spacing, diff.Key, newKey)
-			} else if diff.FromTo == parsers.MapToValue {
+			case parsers.MapToValue:
 				out += fmt.Sprintf("%s- %s: %s", spacing, diff.Key, formatOutputStylish(diff.DiffChild, level+1))
 				out += fmt.Sprintf("%s+ %s: %s\n", spacing, diff.Key, newKey)
-			} else if diff.FromTo == parsers.ValueToMap {
+			case parsers.ValueToMap:
 				out += fmt.Sprintf("%s- %s: %s\n", spacing, diff.Key, oldKey)
 				out += fmt.Sprintf("%s+ %s: %s", spacing, diff.Key, formatOutputStylish(diff.DiffChild, level+1))
-			} else {
+			default:
 				out += fmt.Sprintf("%s  %s: %s", spacing, diff.Key, formatOutputStylish(diff.DiffChild, level+1))
 			}
 		case parsers.Added:

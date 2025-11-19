@@ -3,6 +3,7 @@ package parsers
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"os"
 	"reflect"
 	"strings"
@@ -52,8 +53,11 @@ func ParseYamlConfig(path string, cnf *any) error {
 	if err != nil {
 		return fmt.Errorf("open: %w", err)
 	}
-	defer f.Close()
-
+	defer func() {
+		if err := f.Close(); err != nil {
+			log.Printf("warning: failed to close file: %v", err)
+		}
+	}()
 	dec := yaml.NewDecoder(f)
 	if err := dec.Decode(&cnf); err != nil {
 		return fmt.Errorf("decode: %w", err)

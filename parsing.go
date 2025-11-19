@@ -5,11 +5,6 @@ import (
 	"code/parsers"
 )
 
-type pair struct {
-	First  any
-	Second any
-}
-
 func CompareConfigs(pathBefore string, pathAfter string, format string) (string, error) {
 	var out string
 	diffs, err := parsers.ParseConfigs(pathBefore, pathAfter)

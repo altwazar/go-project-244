@@ -39,13 +39,14 @@ func formatOutputPlain(diffs []parsers.Diff, path string) string {
 		}
 		switch diff.State {
 		case parsers.Updated:
-			if diff.FromTo == parsers.ValueToValue {
+			switch diff.FromTo {
+			case parsers.ValueToValue:
 				out += fmt.Sprintf("Property '%s' was updated. From %s to %s\n", pathKey, oldKey, newKey)
-			} else if diff.FromTo == parsers.MapToValue {
+			case parsers.MapToValue:
 				out += fmt.Sprintf("Property '%s' way updated. From [complex value] to %s\n", pathKey, newKey)
-			} else if diff.FromTo == parsers.ValueToMap {
+			case parsers.ValueToMap:
 				out += fmt.Sprintf("Property '%s' way updated. From %s to [complex value]\n", pathKey, oldKey)
-			} else {
+			default:
 				out += formatOutputPlain(diff.DiffChild, pathKey)
 			}
 		case parsers.Added:

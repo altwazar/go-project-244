@@ -48,16 +48,17 @@ func formatOutputJson(diffs []parsers.Diff, level int) string {
 				out += fmt.Sprintf("%s\"Value\": %s,\n", spacing, formatOutputJson(diff.DiffChild, level+1))
 			}
 		case parsers.Updated:
-			if diff.FromTo == parsers.ValueToValue {
+			switch diff.FromTo {
+			case parsers.ValueToValue:
 				out += fmt.Sprintf("%s\"oldValue\": %v,\n", spacing, oldValue)
 				out += fmt.Sprintf("%s\"newValue\": %v,\n", spacing, newValue)
-			} else if diff.FromTo == parsers.MapToValue {
+			case parsers.MapToValue:
 				out += fmt.Sprintf("%s\"oldValue\": %s,\n", spacing, formatOutputJson(diff.DiffChild, level+1))
 				out += fmt.Sprintf("%s\"newValue\": %v,\n", spacing, newValue)
-			} else if diff.FromTo == parsers.ValueToMap {
+			case parsers.ValueToMap:
 				out += fmt.Sprintf("%s\"oldValue\": %v,\n", spacing, oldValue)
 				out += fmt.Sprintf("%s\"newValue\": %s,\n", spacing, formatOutputJson(diff.DiffChild, level+1))
-			} else {
+			default:
 				out += fmt.Sprintf("%s\"diff\": %s,\n", spacing, formatOutputJson(diff.DiffChild, level+1))
 			}
 		case parsers.Added:
