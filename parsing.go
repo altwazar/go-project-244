@@ -5,6 +5,7 @@ import (
 	"code/parsers"
 )
 
+// Сравнение конфигов, получаю diffs из конфигов и отдаю в форматер.
 func CompareConfigs(pathBefore string, pathAfter string, format string) (string, error) {
 	var out string
 	diffs, err := parsers.ParseConfigs(pathBefore, pathAfter)
