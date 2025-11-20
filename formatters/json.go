@@ -15,7 +15,7 @@ func formatOutputJson(diffs []parsers.Diff, level int) string {
 	return string(jsonData)
 }
 
-// Рекурсивный разбор дифов
+//// Рекурсивный разбор дифов
 // func formatOutputJson(diffs []parsers.Diff, level int) string {
 // 	var out string
 

@@ -19,6 +19,8 @@ const (
 	Added
 )
 
+// Структура для хранения результата сравнения конфигов
+// DiffChild поле для вложенных структур, если один из ключей оказался такой структурой
 type Diff struct {
 	State     int    `json:"state"`
 	Key       string `json:"key"`
@@ -29,104 +31,8 @@ type Diff struct {
 	DiffChild []Diff `json:"diff_child,omitempty"`
 }
 
-func ParseJsonConfig(path string, cnf *any) error {
-	f, err := os.Open(path)
-	if err != nil {
-		return fmt.Errorf("open: %w", err)
-	}
-	defer func() {
-		if err := f.Close(); err != nil {
-			log.Printf("warning: failed to close file: %v", err)
-		}
-	}()
-	dec := json.NewDecoder(f)
-	dec.UseNumber()
-	if err := dec.Decode(&cnf); err != nil {
-		return fmt.Errorf("decode: %w", err)
-	}
-	return nil
-}
-
-func ParseYamlConfig(path string, cnf *any) error {
-	f, err := os.Open(path)
-	if err != nil {
-		return fmt.Errorf("open: %w", err)
-	}
-	defer func() {
-		if err := f.Close(); err != nil {
-			log.Printf("warning: failed to close file: %v", err)
-		}
-	}()
-	dec := yaml.NewDecoder(f)
-	if err := dec.Decode(&cnf); err != nil {
-		return fmt.Errorf("decode: %w", err)
-	}
-	return nil
-}
-
-// Сравнение двух карт и получение из них структуры дифа
-// На текущий момент эта функция для сравнения ключей вызывает compareValues
-// А если значения мапы, то compareValues вызывает снова diffFromMaps
-// Надо разобрать рекурсивный вызов
-func diffFromMaps(a map[string]any, b map[string]any) []Diff {
-	var diffs []Diff
-	uniqueKeys := make(map[string]bool)
-	for key := range a {
-		uniqueKeys[key] = true
-	}
-	for key := range b {
-		uniqueKeys[key] = true
-	}
-	for key := range uniqueKeys {
-		diffs = append(diffs, compareValues(a, b, key))
-	}
-	return diffs
-}
-
-// Сравнение двух значений в мапах
-func compareValues(old map[string]any, new map[string]any, key string) Diff {
-	newMap, newIsMap := new[key].(map[string]any)
-	oldMap, oldIsMap := old[key].(map[string]any)
-	newValue, newExists := new[key]
-	oldValue, oldExists := old[key]
-	state := Equal
-	newIsMap = false
-	oldIsMap = false
-	diffChild := []Diff{}
-	if newExists && oldExists {
-		if !reflect.DeepEqual(newValue, oldValue) {
-			state = Updated
-		}
-	} else if newExists {
-		state = Added
-	} else {
-		state = Removed
-	}
-	if newIsMap && oldIsMap {
-		diffChild = diffFromMaps(oldMap, newMap)
-		oldIsMap = true
-		newIsMap = true
-		oldValue = nil
-		newValue = nil
-	} else if newIsMap {
-		diffChild = diffFromMaps(newMap, newMap)
-		newIsMap = true
-		newValue = nil
-	} else if oldIsMap {
-		diffChild = diffFromMaps(oldMap, oldMap)
-		oldIsMap = true
-		oldValue = nil
-	}
-	return Diff{
-		State:     state,
-		NewIsMap:  newIsMap,
-		OldIsMap:  oldIsMap,
-		Key:       key,
-		Old:       oldValue,
-		New:       newValue,
-		DiffChild: diffChild,
-	}
-}
+// Парсинг конфигов, преобразование их в виде map[string]any
+// Затем получение списка изменений []Diffs
 func ParseConfigs(pathBefore string, pathAfter string) ([]Diff, error) {
 	var diffs []Diff
 	cfgBefore, err := parseConfig(pathBefore)
@@ -150,6 +56,8 @@ func ParseConfigs(pathBefore string, pathAfter string) ([]Diff, error) {
 	diffs = diffFromMaps(mapBefore, mapAfter)
 	return diffs, nil
 }
+
+// Преобразование конфига
 func parseConfig(path string) (any, error) {
 	var cnf any
 	if strings.HasSuffix(path, ".json") {
@@ -167,4 +75,104 @@ func parseConfig(path string) (any, error) {
 		return nil, err
 	}
 	return cnf, nil
+}
+
+// Преобразование JSON
+func ParseJsonConfig(path string, cnf *any) error {
+	f, err := os.Open(path)
+	if err != nil {
+		return fmt.Errorf("open: %w", err)
+	}
+	defer func() {
+		if err := f.Close(); err != nil {
+			log.Printf("warning: failed to close file: %v", err)
+		}
+	}()
+	dec := json.NewDecoder(f)
+	dec.UseNumber()
+	if err := dec.Decode(&cnf); err != nil {
+		return fmt.Errorf("decode: %w", err)
+	}
+	return nil
+}
+
+// Преобразование Yaml
+func ParseYamlConfig(path string, cnf *any) error {
+	f, err := os.Open(path)
+	if err != nil {
+		return fmt.Errorf("open: %w", err)
+	}
+	defer func() {
+		if err := f.Close(); err != nil {
+			log.Printf("warning: failed to close file: %v", err)
+		}
+	}()
+	dec := yaml.NewDecoder(f)
+	if err := dec.Decode(&cnf); err != nil {
+		return fmt.Errorf("decode: %w", err)
+	}
+	return nil
+}
+
+// Сравнение двух карт и получение из них структуры дифа
+// На текущий момент эта функция для сравнения ключей вызывает compareValues
+// А если значения мапы, то compareValues вызывает снова diffFromMaps
+// Надо разобрать рекурсивный вызов
+func diffFromMaps(a map[string]any, b map[string]any) []Diff {
+	// в diffs попадают результаты сравнения
+	var diffs []Diff
+	// Список ключей в двух мапах
+	uniqueKeys := make(map[string]bool)
+	for key := range a {
+		uniqueKeys[key] = true
+	}
+	for key := range b {
+		uniqueKeys[key] = true
+	}
+	// Сравнение по полученному списку ключей
+	for key := range uniqueKeys {
+		diffs = append(diffs, compareValues(a, b, key))
+	}
+	return diffs
+}
+
+// Сравнение двух значений в мапах
+func compareValues(old map[string]any, new map[string]any, key string) Diff {
+	// Получение потенциальных map из ключей
+	newMap, newIsMap := new[key].(map[string]any)
+	oldMap, oldIsMap := old[key].(map[string]any)
+	// Получение значений из ключей
+	newValue, newExists := new[key]
+	oldValue, oldExists := old[key]
+	state := Equal
+	diffChild := []Diff{}
+	// Получение статусов изменения значений ключа
+	if newExists && oldExists {
+		if !reflect.DeepEqual(newValue, oldValue) {
+			state = Updated
+		}
+	} else if newExists {
+		state = Added
+	} else {
+		state = Removed
+	}
+	// Обработка случаев, когда одно из значений является вложенной структурой
+	// Вложенная структура хранится в виде []Diff в diffChild
+	if newIsMap && oldIsMap {
+		diffChild = diffFromMaps(oldMap, newMap)
+	} else if newIsMap {
+		diffChild = diffFromMaps(newMap, newMap)
+	} else if oldIsMap {
+		diffChild = diffFromMaps(oldMap, oldMap)
+	}
+	// это попадет в массив diffs функции diffFromMaps
+	return Diff{
+		State:     state,
+		NewIsMap:  newIsMap,
+		OldIsMap:  oldIsMap,
+		Key:       key,
+		Old:       oldValue,
+		New:       newValue,
+		DiffChild: diffChild,
+	}
 }

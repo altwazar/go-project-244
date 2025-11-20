@@ -10,6 +10,7 @@ import (
 // Рекурсивный разбор изменений в плоском формате
 func formatOutputPlain(diffs []parsers.Diff, path string) string {
 	var out string
+	// Сортировка по ключам
 	sort.Slice(diffs, func(i, j int) bool {
 		return diffs[i].Key < diffs[j].Key
 	})
@@ -17,7 +18,7 @@ func formatOutputPlain(diffs []parsers.Diff, path string) string {
 	var oldKey string
 	var pathKey string
 	for _, diff := range diffs {
-		// Преобразование значения в строку
+		// Значения ключей в нужном формате
 		if diff.New == nil {
 			newKey = "null"
 		} else if isString(diff.New) {
@@ -32,11 +33,13 @@ func formatOutputPlain(diffs []parsers.Diff, path string) string {
 		} else {
 			oldKey = fmt.Sprintf("%v", diff.Old)
 		}
+		// Путь ключа для plain вывода
 		if path != "" {
 			pathKey = path + "." + diff.Key
 		} else {
 			pathKey = diff.Key
 		}
+		// Формирование тела вывода, для вложенных структур рекурсивно вызывается эта же функция
 		switch diff.State {
 		case parsers.Updated:
 			switch {
