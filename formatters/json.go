@@ -4,15 +4,30 @@ import (
 	"code/parsers"
 	"encoding/json"
 	"log"
+	"sort"
 )
 
 // Преобразование []diff в JSON, затем в строку
 func formatOutputJson(diffs []parsers.Diff, level int) string {
+	// Сортируем diffs по ключу для стабильного порядка
+	sortDiff(diffs)
+	// Рекурсивно сортируем детей
 	jsonData, err := json.MarshalIndent(diffs, "", "  ")
 	if err != nil {
 		log.Printf("warning: failed to marshal diff to json: %v", err)
 	}
-	return string(jsonData)
+	return string(jsonData) + "\n"
+}
+
+func sortDiff(diffs []parsers.Diff) {
+	sort.Slice(diffs, func(i, j int) bool {
+		return diffs[i].Key < diffs[j].Key
+	})
+	for i := range diffs {
+		if diffs[i].DiffChild != nil {
+			sortDiff(diffs[i].DiffChild)
+		}
+	}
 }
 
 //// Рекурсивный разбор дифов
