@@ -11,26 +11,22 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+// Статус сравнения значений ключа
 const (
 	Equal = iota
 	Updated
 	Removed
 	Added
 )
-const (
-	ValueToValue = iota
-	ValueToMap
-	MapToValue
-	MapToMap
-)
 
 type Diff struct {
-	State     int
-	FromTo    int
-	Key       string
-	Old       any
-	New       any
-	DiffChild []Diff
+	State     int    `json:"state"`
+	Key       string `json:"key"`
+	OldIsMap  bool   `json:"oldismap"`
+	NewIsMap  bool   `json:"newismap"`
+	Old       any    `json:"old,omitempty"`
+	New       any    `json:"new,omitempty"`
+	DiffChild []Diff `json:"diff_child,omitempty"`
 }
 
 func ParseJsonConfig(path string, cnf *any) error {
@@ -91,13 +87,14 @@ func diffFromMaps(a map[string]any, b map[string]any) []Diff {
 func compareValues(old map[string]any, new map[string]any, key string) Diff {
 	newMap, newIsMap := new[key].(map[string]any)
 	oldMap, oldIsMap := old[key].(map[string]any)
-	newKey, newExists := new[key]
-	oldKey, oldExists := old[key]
+	newValue, newExists := new[key]
+	oldValue, oldExists := old[key]
 	state := Equal
-	fromto := ValueToValue
+	newIsMap = false
+	oldIsMap = false
 	diffChild := []Diff{}
 	if newExists && oldExists {
-		if !reflect.DeepEqual(newKey, oldKey) {
+		if !reflect.DeepEqual(newValue, oldValue) {
 			state = Updated
 		}
 	} else if newExists {
@@ -107,20 +104,26 @@ func compareValues(old map[string]any, new map[string]any, key string) Diff {
 	}
 	if newIsMap && oldIsMap {
 		diffChild = diffFromMaps(oldMap, newMap)
-		fromto = MapToMap
+		oldIsMap = true
+		newIsMap = true
+		oldValue = nil
+		newValue = nil
 	} else if newIsMap {
 		diffChild = diffFromMaps(newMap, newMap)
-		fromto = ValueToMap
+		newIsMap = true
+		newValue = nil
 	} else if oldIsMap {
 		diffChild = diffFromMaps(oldMap, oldMap)
-		fromto = MapToValue
+		oldIsMap = true
+		oldValue = nil
 	}
 	return Diff{
 		State:     state,
-		FromTo:    fromto,
+		NewIsMap:  newIsMap,
+		OldIsMap:  oldIsMap,
 		Key:       key,
-		Old:       oldKey,
-		New:       newKey,
+		Old:       oldValue,
+		New:       newValue,
 		DiffChild: diffChild,
 	}
 }

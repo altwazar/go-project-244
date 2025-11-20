@@ -33,33 +33,33 @@ func formatOutputStylish(diffs []parsers.Diff, level int) string {
 		}
 		switch diff.State {
 		case parsers.Equal:
-			if diff.FromTo == parsers.ValueToValue {
+			if !diff.OldIsMap && !diff.NewIsMap {
 				out += fmt.Sprintf("%s  %s: %s\n", spacing, diff.Key, newKey)
 			} else {
 				out += fmt.Sprintf("%s  %s: %s", spacing, diff.Key, formatOutputStylish(diff.DiffChild, level+1))
 			}
 		case parsers.Updated:
-			switch diff.FromTo {
-			case parsers.ValueToValue:
+			switch {
+			case !diff.OldIsMap && !diff.NewIsMap:
 				out += fmt.Sprintf("%s- %s: %s\n", spacing, diff.Key, oldKey)
 				out += fmt.Sprintf("%s+ %s: %s\n", spacing, diff.Key, newKey)
-			case parsers.MapToValue:
+			case diff.OldIsMap && !diff.NewIsMap:
 				out += fmt.Sprintf("%s- %s: %s", spacing, diff.Key, formatOutputStylish(diff.DiffChild, level+1))
 				out += fmt.Sprintf("%s+ %s: %s\n", spacing, diff.Key, newKey)
-			case parsers.ValueToMap:
+			case !diff.OldIsMap && diff.NewIsMap:
 				out += fmt.Sprintf("%s- %s: %s\n", spacing, diff.Key, oldKey)
 				out += fmt.Sprintf("%s+ %s: %s", spacing, diff.Key, formatOutputStylish(diff.DiffChild, level+1))
 			default:
 				out += fmt.Sprintf("%s  %s: %s", spacing, diff.Key, formatOutputStylish(diff.DiffChild, level+1))
 			}
 		case parsers.Added:
-			if diff.FromTo == parsers.ValueToValue {
+			if !diff.OldIsMap && !diff.NewIsMap {
 				out += fmt.Sprintf("%s+ %s: %s\n", spacing, diff.Key, newKey)
 			} else {
 				out += fmt.Sprintf("%s+ %s: %s", spacing, diff.Key, formatOutputStylish(diff.DiffChild, level+1))
 			}
 		case parsers.Removed:
-			if diff.FromTo == parsers.ValueToValue {
+			if !diff.OldIsMap && !diff.NewIsMap {
 				out += fmt.Sprintf("%s- %s: %s\n", spacing, diff.Key, oldKey)
 			} else {
 				out += fmt.Sprintf("%s- %s: %s", spacing, diff.Key, formatOutputStylish(diff.DiffChild, level+1))
