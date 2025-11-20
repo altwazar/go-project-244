@@ -1,0 +1,95 @@
+[
+  {
+  "state": 0,
+  "key": "common",
+  "Value": [
+      {
+      "state": 0,
+      "key": "setting1",
+      "Value": "Value 1"
+      },
+      {
+      "state": 0,
+      "key": "setting2",
+      "Value": 200
+      },
+      {
+      "state": 0,
+      "key": "setting3",
+      "Value": true
+      },
+      {
+      "state": 0,
+      "key": "setting6",
+      "Value": [
+          {
+          "state": 0,
+          "key": "doge",
+          "Value": [
+              {
+              "state": 0,
+              "key": "wow",
+              "Value": ""
+              }
+            ]
+          },
+          {
+          "state": 0,
+          "key": "key",
+          "Value": "value"
+          }
+        ]
+      }
+    ]
+  },
+  {
+  "state": 0,
+  "key": "group1",
+  "Value": [
+      {
+      "state": 0,
+      "key": "baz",
+      "Value": "bas"
+      },
+      {
+      "state": 0,
+      "key": "foo",
+      "Value": "bar"
+      },
+      {
+      "state": 0,
+      "key": "nest",
+      "Value": [
+          {
+          "state": 0,
+          "key": "key",
+          "Value": "value"
+          }
+        ]
+      }
+    ]
+  },
+  {
+  "state": 0,
+  "key": "group2",
+  "Value": [
+      {
+      "state": 0,
+      "key": "abc",
+      "Value": 12345
+      },
+      {
+      "state": 0,
+      "key": "deep",
+      "Value": [
+          {
+          "state": 0,
+          "key": "id",
+          "Value": 45
+          }
+        ]
+      }
+    ]
+  }
+]
+

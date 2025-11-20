@@ -1,0 +1,153 @@
+[
+  {
+  "state": 1,
+  "key": "common",
+  "diff": [
+      {
+      "state": 3,
+      "key": "follow",
+      "newValue": false
+      },
+      {
+      "state": 0,
+      "key": "setting1",
+      "Value": "Value 1"
+      },
+      {
+      "state": 2,
+      "key": "setting2",
+      "oldValue": 200
+      },
+      {
+      "state": 1,
+      "key": "setting3",
+      "oldValue": true,
+      "newValue": null
+      },
+      {
+      "state": 3,
+      "key": "setting4",
+      "newValue": "blah blah"
+      },
+      {
+      "state": 3,
+      "key": "setting5",
+      "newValue": [
+          {
+          "state": 0,
+          "key": "key5",
+          "Value": "value5"
+          }
+        ]
+      },
+      {
+      "state": 1,
+      "key": "setting6",
+      "diff": [
+          {
+          "state": 1,
+          "key": "doge",
+          "diff": [
+              {
+              "state": 1,
+              "key": "wow",
+              "oldValue": "",
+              "newValue": "so much"
+              }
+            ]
+          },
+          {
+          "state": 0,
+          "key": "key",
+          "Value": "value"
+          },
+          {
+          "state": 3,
+          "key": "ops",
+          "newValue": "vops"
+          }
+        ]
+      }
+    ]
+  },
+  {
+  "state": 1,
+  "key": "group1",
+  "diff": [
+      {
+      "state": 1,
+      "key": "baz",
+      "oldValue": "bas",
+      "newValue": "bars"
+      },
+      {
+      "state": 0,
+      "key": "foo",
+      "Value": "bar"
+      },
+      {
+      "state": 1,
+      "key": "nest",
+      "oldValue": [
+          {
+          "state": 0,
+          "key": "key",
+          "Value": "value"
+          }
+        ],
+      "newValue": "str"
+      }
+    ]
+  },
+  {
+  "state": 2,
+  "key": "group2",
+  "oldValue": [
+      {
+      "state": 0,
+      "key": "abc",
+      "Value": 12345
+      },
+      {
+      "state": 0,
+      "key": "deep",
+      "Value": [
+          {
+          "state": 0,
+          "key": "id",
+          "Value": 45
+          }
+        ]
+      }
+    ]
+  },
+  {
+  "state": 3,
+  "key": "group3",
+  "newValue": [
+      {
+      "state": 0,
+      "key": "deep",
+      "Value": [
+          {
+          "state": 0,
+          "key": "id",
+          "Value": [
+              {
+              "state": 0,
+              "key": "number",
+              "Value": 45
+              }
+            ]
+          }
+        ]
+      },
+      {
+      "state": 0,
+      "key": "fee",
+      "Value": 100500
+      }
+    ]
+  }
+]
+
