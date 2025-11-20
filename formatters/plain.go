@@ -46,9 +46,9 @@ func formatOutputPlain(diffs []parsers.Diff, path string) string {
 			case !diff.OldIsMap && !diff.NewIsMap:
 				out += fmt.Sprintf("Property '%s' was updated. From %s to %s\n", pathKey, oldKey, newKey)
 			case diff.OldIsMap && !diff.NewIsMap:
-				out += fmt.Sprintf("Property '%s' way updated. From [complex value] to %s\n", pathKey, newKey)
+				out += fmt.Sprintf("Property '%s' was updated. From [complex value] to %s\n", pathKey, newKey)
 			case !diff.OldIsMap && diff.NewIsMap:
-				out += fmt.Sprintf("Property '%s' way updated. From %s to [complex value]\n", pathKey, oldKey)
+				out += fmt.Sprintf("Property '%s' was updated. From %s to [complex value]\n", pathKey, oldKey)
 			default:
 				out += formatOutputPlain(diff.DiffChild, pathKey)
 			}
@@ -56,7 +56,7 @@ func formatOutputPlain(diffs []parsers.Diff, path string) string {
 			if !diff.OldIsMap && !diff.NewIsMap {
 				out += fmt.Sprintf("Property '%s' was added with value: %s\n", pathKey, newKey)
 			} else {
-				out += fmt.Sprintf("Property '%s' way added with value: [complex value]\n", diff.Key)
+				out += fmt.Sprintf("Property '%s' was added with value: [complex value]\n", pathKey)
 			}
 		case parsers.Removed:
 			out += fmt.Sprintf("Property '%s' was removed\n", pathKey)
