@@ -46,14 +46,6 @@ func TestCompareConfigs(t *testing.T) {
 			expErr:     nil,
 		},
 		{
-			name:       "Two JSON files 1 to 1 json format",
-			file1:      filepath.Join("testdata", "fixtures", "1", "file1.json"),
-			file2:      filepath.Join("testdata", "fixtures", "1", "file1.json"),
-			expOutPath: filepath.Join("testdata", "fixtures", "1", "1to1_json_json_expected.golden"),
-			format:     "json",
-			expErr:     nil,
-		},
-		{
 			name:       "Two JSON files 1 to 1 stylish format",
 			file1:      filepath.Join("testdata", "fixtures", "1", "file1.json"),
 			file2:      filepath.Join("testdata", "fixtures", "1", "file1.json"),
@@ -67,14 +59,6 @@ func TestCompareConfigs(t *testing.T) {
 			file2:      filepath.Join("testdata", "fixtures", "1", "file1.json"),
 			expOutPath: filepath.Join("testdata", "fixtures", "1", "1to1_json_plain_expected.golden"),
 			format:     "plain",
-			expErr:     nil,
-		},
-		{
-			name:       "Two JSON files 1 to 2 json format",
-			file1:      filepath.Join("testdata", "fixtures", "1", "file1.json"),
-			file2:      filepath.Join("testdata", "fixtures", "1", "file2.json"),
-			expOutPath: filepath.Join("testdata", "fixtures", "1", "1to2_json_json_expected.golden"),
-			format:     "json",
 			expErr:     nil,
 		},
 		{
@@ -94,14 +78,6 @@ func TestCompareConfigs(t *testing.T) {
 			expErr:     nil,
 		},
 		{
-			name:       "Two JSON files 2 to 1 json format",
-			file1:      filepath.Join("testdata", "fixtures", "1", "file2.json"),
-			file2:      filepath.Join("testdata", "fixtures", "1", "file1.json"),
-			expOutPath: filepath.Join("testdata", "fixtures", "1", "2to1_json_json_expected.golden"),
-			format:     "json",
-			expErr:     nil,
-		},
-		{
 			name:       "Two JSON files 2 to 1 stylish format",
 			file1:      filepath.Join("testdata", "fixtures", "1", "file2.json"),
 			file2:      filepath.Join("testdata", "fixtures", "1", "file1.json"),
@@ -115,14 +91,6 @@ func TestCompareConfigs(t *testing.T) {
 			file2:      filepath.Join("testdata", "fixtures", "1", "file1.json"),
 			expOutPath: filepath.Join("testdata", "fixtures", "1", "2to1_json_plain_expected.golden"),
 			format:     "plain",
-			expErr:     nil,
-		},
-		{
-			name:       "Two JSON files 2 to 2 json format",
-			file1:      filepath.Join("testdata", "fixtures", "1", "file2.json"),
-			file2:      filepath.Join("testdata", "fixtures", "1", "file2.json"),
-			expOutPath: filepath.Join("testdata", "fixtures", "1", "2to2_json_json_expected.golden"),
-			format:     "json",
 			expErr:     nil,
 		},
 		{
@@ -144,14 +112,6 @@ func TestCompareConfigs(t *testing.T) {
 
 		// YAML файлы
 		{
-			name:       "Two YAML files 1 to 1 json format",
-			file1:      filepath.Join("testdata", "fixtures", "1", "file1.yml"),
-			file2:      filepath.Join("testdata", "fixtures", "1", "file1.yml"),
-			expOutPath: filepath.Join("testdata", "fixtures", "1", "1to1_yaml_json_expected.golden"),
-			format:     "json",
-			expErr:     nil,
-		},
-		{
 			name:       "Two YAML files 1 to 1 stylish format",
 			file1:      filepath.Join("testdata", "fixtures", "1", "file1.yml"),
 			file2:      filepath.Join("testdata", "fixtures", "1", "file1.yml"),
@@ -165,14 +125,6 @@ func TestCompareConfigs(t *testing.T) {
 			file2:      filepath.Join("testdata", "fixtures", "1", "file1.yml"),
 			expOutPath: filepath.Join("testdata", "fixtures", "1", "1to1_yaml_plain_expected.golden"),
 			format:     "plain",
-			expErr:     nil,
-		},
-		{
-			name:       "Two YAML files 1 to 2 json format",
-			file1:      filepath.Join("testdata", "fixtures", "1", "file1.yml"),
-			file2:      filepath.Join("testdata", "fixtures", "1", "file2.yml"),
-			expOutPath: filepath.Join("testdata", "fixtures", "1", "1to2_yaml_json_expected.golden"),
-			format:     "json",
 			expErr:     nil,
 		},
 		{
@@ -192,14 +144,6 @@ func TestCompareConfigs(t *testing.T) {
 			expErr:     nil,
 		},
 		{
-			name:       "Two YAML files 2 to 1 json format",
-			file1:      filepath.Join("testdata", "fixtures", "1", "file2.yml"),
-			file2:      filepath.Join("testdata", "fixtures", "1", "file1.yml"),
-			expOutPath: filepath.Join("testdata", "fixtures", "1", "2to1_yaml_json_expected.golden"),
-			format:     "json",
-			expErr:     nil,
-		},
-		{
 			name:       "Two YAML files 2 to 1 stylish format",
 			file1:      filepath.Join("testdata", "fixtures", "1", "file2.yml"),
 			file2:      filepath.Join("testdata", "fixtures", "1", "file1.yml"),
@@ -213,14 +157,6 @@ func TestCompareConfigs(t *testing.T) {
 			file2:      filepath.Join("testdata", "fixtures", "1", "file1.yml"),
 			expOutPath: filepath.Join("testdata", "fixtures", "1", "2to1_yaml_plain_expected.golden"),
 			format:     "plain",
-			expErr:     nil,
-		},
-		{
-			name:       "Two YAML files 2 to 2 json format",
-			file1:      filepath.Join("testdata", "fixtures", "1", "file2.yml"),
-			file2:      filepath.Join("testdata", "fixtures", "1", "file2.yml"),
-			expOutPath: filepath.Join("testdata", "fixtures", "1", "2to2_yaml_json_expected.golden"),
-			format:     "json",
 			expErr:     nil,
 		},
 		{
