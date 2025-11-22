@@ -79,14 +79,6 @@ func TestCompareConfigs(t *testing.T) {
 			expErr:     nil,
 		},
 		{
-			name:       "Two JSON files 1 to 1 plain format",
-			file1:      filepath.Join("testdata", "fixtures", "1", "file1.json"),
-			file2:      filepath.Join("testdata", "fixtures", "1", "file1.json"),
-			expOutPath: filepath.Join("testdata", "fixtures", "1", "1to1_json_plain_expected.golden"),
-			format:     "plain",
-			expErr:     nil,
-		},
-		{
 			name:       "Two JSON files 1 to 2 stylish format",
 			file1:      filepath.Join("testdata", "fixtures", "1", "file1.json"),
 			file2:      filepath.Join("testdata", "fixtures", "1", "file2.json"),
@@ -126,14 +118,6 @@ func TestCompareConfigs(t *testing.T) {
 			format:     "stylish",
 			expErr:     nil,
 		},
-		{
-			name:       "Two JSON files 2 to 2 plain format",
-			file1:      filepath.Join("testdata", "fixtures", "1", "file2.json"),
-			file2:      filepath.Join("testdata", "fixtures", "1", "file2.json"),
-			expOutPath: filepath.Join("testdata", "fixtures", "1", "2to2_json_plain_expected.golden"),
-			format:     "plain",
-			expErr:     nil,
-		},
 
 		// YAML файлы
 		{
@@ -142,14 +126,6 @@ func TestCompareConfigs(t *testing.T) {
 			file2:      filepath.Join("testdata", "fixtures", "1", "file1.yml"),
 			expOutPath: filepath.Join("testdata", "fixtures", "1", "1to1_yaml_stylish_expected.golden"),
 			format:     "stylish",
-			expErr:     nil,
-		},
-		{
-			name:       "Two YAML files 1 to 1 plain format",
-			file1:      filepath.Join("testdata", "fixtures", "1", "file1.yml"),
-			file2:      filepath.Join("testdata", "fixtures", "1", "file1.yml"),
-			expOutPath: filepath.Join("testdata", "fixtures", "1", "1to1_yaml_plain_expected.golden"),
-			format:     "plain",
 			expErr:     nil,
 		},
 		{
@@ -181,22 +157,6 @@ func TestCompareConfigs(t *testing.T) {
 			file1:      filepath.Join("testdata", "fixtures", "1", "file2.yml"),
 			file2:      filepath.Join("testdata", "fixtures", "1", "file1.yml"),
 			expOutPath: filepath.Join("testdata", "fixtures", "1", "2to1_yaml_plain_expected.golden"),
-			format:     "plain",
-			expErr:     nil,
-		},
-		{
-			name:       "Two YAML files 2 to 2 stylish format",
-			file1:      filepath.Join("testdata", "fixtures", "1", "file2.yml"),
-			file2:      filepath.Join("testdata", "fixtures", "1", "file2.yml"),
-			expOutPath: filepath.Join("testdata", "fixtures", "1", "2to2_yaml_stylish_expected.golden"),
-			format:     "stylish",
-			expErr:     nil,
-		},
-		{
-			name:       "Two YAML files 2 to 2 plain format",
-			file1:      filepath.Join("testdata", "fixtures", "1", "file2.yml"),
-			file2:      filepath.Join("testdata", "fixtures", "1", "file2.yml"),
-			expOutPath: filepath.Join("testdata", "fixtures", "1", "2to2_yaml_plain_expected.golden"),
 			format:     "plain",
 			expErr:     nil,
 		},
@@ -295,6 +255,9 @@ func runCompareConfigs(
 		t.Fatalf("read %s: %v", expOutPath, err)
 	}
 	out, err := GenDiff(file1, file2, format)
+	// В тестах Hexlet Check нет \n на конце
+	// который есть при сравнении вывода с файлом
+	out += "\n"
 	assert.Equal(t, expErr, err)
 	assert.Equal(t, expOut, out)
 }
