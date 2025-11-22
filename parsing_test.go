@@ -45,6 +45,31 @@ func TestCompareConfigs(t *testing.T) {
 			format:     "stylish",
 			expErr:     nil,
 		},
+
+		{
+			name:       "Two YAML Hexlet 1 to 2 json format",
+			file1:      filepath.Join("testdata", "fixtures", "hexlet", "file1.yml"),
+			file2:      filepath.Join("testdata", "fixtures", "hexlet", "file2.yml"),
+			expOutPath: filepath.Join("testdata", "fixtures", "hexlet", "result_json.json"),
+			format:     "json",
+			expErr:     nil,
+		},
+		{
+			name:       "Two YAML Hexlet 1 to 2 plain format",
+			file1:      filepath.Join("testdata", "fixtures", "hexlet", "file1.yml"),
+			file2:      filepath.Join("testdata", "fixtures", "hexlet", "file2.yml"),
+			expOutPath: filepath.Join("testdata", "fixtures", "hexlet", "result_plain.txt"),
+			format:     "plain",
+			expErr:     nil,
+		},
+		{
+			name:       "Two YAML Hexlet 1 to 2 stylish format",
+			file1:      filepath.Join("testdata", "fixtures", "hexlet", "file1.yml"),
+			file2:      filepath.Join("testdata", "fixtures", "hexlet", "file2.yml"),
+			expOutPath: filepath.Join("testdata", "fixtures", "hexlet", "result_stylish.txt"),
+			format:     "stylish",
+			expErr:     nil,
+		},
 		{
 			name:       "Two JSON files 1 to 1 stylish format",
 			file1:      filepath.Join("testdata", "fixtures", "1", "file1.json"),
@@ -269,7 +294,7 @@ func runCompareConfigs(
 	if err != nil {
 		t.Fatalf("read %s: %v", expOutPath, err)
 	}
-	out, err := CompareConfigs(file1, file2, format)
+	out, err := GenDiff(file1, file2, format)
 	assert.Equal(t, expErr, err)
 	assert.Equal(t, expOut, out)
 }

@@ -47,7 +47,7 @@ func main() {
 					format, strings.Join(allowedFormats, ", "))
 			}
 			// Получение текста для вывода
-			out, err := code.CompareConfigs(pathBefore, pathAfter, format)
+			out, err := code.GenDiff(pathBefore, pathAfter, format)
 			if err != nil {
 				log.Fatal(err)
 			}

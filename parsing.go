@@ -6,7 +6,7 @@ import (
 )
 
 // Сравнение конфигов, получаю diffs из конфигов и отдаю в форматер.
-func CompareConfigs(pathBefore string, pathAfter string, format string) (string, error) {
+func GenDiff(pathBefore string, pathAfter string, format string) (string, error) {
 	var out string
 	diffs, err := parsers.ParseConfigs(pathBefore, pathAfter)
 	if err != nil {

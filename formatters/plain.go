@@ -67,8 +67,3 @@ func formatOutputPlain(diffs []parsers.Diff, path string) string {
 	}
 	return out
 }
-
-func isString(value any) bool {
-	_, ok := value.(string)
-	return ok
-}

@@ -9,43 +9,28 @@ import (
 
 // Рекурсивное формирование json вывода
 // noDiff - для обработки вывода вложенной структуры без сравнения
-func formatOutputJson(diffs []parsers.Diff, level int, noDiff bool) string {
+func formatOutputJson(diffs []parsers.Diff) string {
 	var out string
+	rootDiff := parsers.Diff{
+		Key:       "",
+		State:     parsers.Root,
+		NewIsMap:  true,
+		DiffChild: diffs,
+	}
 	// Строка отступ
 	spacing := strings.Repeat(" ", 2)
-	sort.Slice(diffs, func(i, j int) bool {
-		return diffs[i].Key < diffs[j].Key
-	})
-	// Шаблон в начале на нулевом уровне
-	if level == 0 {
-		out += "{\n"
-		out += spacing + "\"key\": \"\",\n"
-		out += spacing + "\"type\": \"root\",\n"
-		out += spacing + "\"children\": [\n"
-	}
-	// Перебор диффов. Начальный отступ ри нулевом уровне
-	if level != 0 {
-		out += diffRange(diffs, level, spacing, noDiff)
-	} else {
-		out += diffRange(diffs, level+2, spacing, noDiff)
-	}
-	// Удаляется запятая в конце перечислений
-	out = strings.TrimSuffix(out, ",\n") + "\n"
-	switch {
-	// Обработка вывода нулевого уровня
-	case level == 0 && !noDiff:
-		out += spacing + "]\n}\n"
-	case level == 0 && noDiff:
-		out += "}\n"
 	// закрытие списка после вывода самого списка диффов
-	case level != 0 && !noDiff:
-		out += strings.Repeat(spacing, level-1) + "]"
-	}
+	out += formatDiff(rootDiff, 0, spacing)
+	out = strings.TrimSuffix(out, ",\n") + "\n"
 	return out
 }
 
 // Обработка списка диффов
 func diffRange(diffs []parsers.Diff, level int, spacing string, noDiff bool) string {
+	// Сортировка ключей
+	sort.Slice(diffs, func(i, j int) bool {
+		return diffs[i].Key < diffs[j].Key
+	})
 	var out string
 	for _, diff := range diffs {
 		// Кроме нулевого уровня отступы меняются в функциях вывода
@@ -54,6 +39,11 @@ func diffRange(diffs []parsers.Diff, level int, spacing string, noDiff bool) str
 		} else {
 			out += formatDiff(diff, level, spacing)
 		}
+	}
+	// Удаляется запятая в конце перечислений
+	out = strings.TrimSuffix(out, ",\n") + "\n"
+	if !noDiff {
+		out += strings.Repeat(spacing, level-1) + "]"
 	}
 	return out
 }
@@ -96,6 +86,8 @@ func formatDiff(diff parsers.Diff, level int, spacing string) string {
 		state = "deleted"
 	case parsers.Equal:
 		state = "unchanged"
+	case parsers.Root:
+		state = "root"
 	}
 	// Начальная скобочка и фиксированные поля key и type
 	out += spacingBraces + "{\n"
@@ -112,7 +104,7 @@ func formatDiff(diff parsers.Diff, level int, spacing string) string {
 		} else {
 			out += fmt.Sprintf("%s\"value1\": {\n%s\n%s},\n",
 				spacingKeys,
-				formatOutputJson(diff.DiffChild, level+1, true),
+				diffRange(diff.DiffChild, level+1, spacing, true),
 				spacingKeys)
 		}
 	case "changed":
@@ -126,7 +118,7 @@ func formatDiff(diff parsers.Diff, level int, spacing string) string {
 			}
 		case diff.OldIsMap && !diff.NewIsMap:
 			out += fmt.Sprintf("%s\"value1\": {\n%s%s},\n", spacingKeys,
-				formatOutputJson(diff.DiffChild, level+1, true), spacingKeys)
+				diffRange(diff.DiffChild, level+1, spacing, true), spacingKeys)
 			if diff.New != nil {
 				out += fmt.Sprintf("%s\"value2\": %v,\n", spacingKeys, newValue)
 			}
@@ -135,17 +127,17 @@ func formatDiff(diff parsers.Diff, level int, spacing string) string {
 				out += fmt.Sprintf("%s\"value1\": %v,\n", spacingKeys, oldValue)
 			}
 			out += fmt.Sprintf("%s\"value2\": {\n%s%s},\n", spacingKeys,
-				formatOutputJson(diff.DiffChild, level+1, true), spacingKeys)
+				diffRange(diff.DiffChild, level+1, spacing, true), spacingKeys)
 		}
-	case "nested":
+	case "nested", "root":
 		out += fmt.Sprintf("%s\"children\": [\n%s,\n", spacingKeys,
-			formatOutputJson(diff.DiffChild, level+2, false))
+			diffRange(diff.DiffChild, level+2, spacing, false))
 	case "added":
 		if !diff.NewIsMap {
 			out += fmt.Sprintf("%s\"value2\": %v,\n", spacingKeys, newValue)
 		} else {
 			out += fmt.Sprintf("%s\"value2\": {\n%s%s},\n", spacingKeys,
-				formatOutputJson(diff.DiffChild, level+1, true), spacingKeys)
+				diffRange(diff.DiffChild, level+1, spacing, true), spacingKeys)
 		}
 	case "deleted":
 		if !diff.OldIsMap {
@@ -153,7 +145,7 @@ func formatDiff(diff parsers.Diff, level int, spacing string) string {
 		} else {
 			out += fmt.Sprintf("%s\"value1\": {\n%s%s},\n",
 				spacingKeys,
-				formatOutputJson(diff.DiffChild, level+1, true),
+				diffRange(diff.DiffChild, level+1, spacing, true),
 				spacingKeys)
 		}
 	}
@@ -179,7 +171,7 @@ func formatNoDiff(diff parsers.Diff, level int, spacing string) string {
 		out += fmt.Sprintf("%s\"%s\": {\n%s%s},\n",
 			spacingKeys,
 			diff.Key,
-			formatOutputJson(diff.DiffChild, level+1, true),
+			diffRange(diff.DiffChild, level+1, spacing, true),
 			spacingKeys)
 	}
 	return out
