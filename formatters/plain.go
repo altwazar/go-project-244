@@ -8,7 +8,13 @@ import (
 )
 
 // Рекурсивный разбор изменений в плоском формате
-func formatOutputPlain(diffs []parsers.Diff, path string) string {
+func formatOutputPlain(rootDiff parsers.Diff) string {
+	var out string
+	out += formatDiffChildPlain(rootDiff.DiffChild, "")
+	out = strings.TrimSuffix(out, "\n")
+	return out
+}
+func formatDiffChildPlain(diffs []parsers.Diff, path string) string {
 	var out string
 	// Сортировка по ключам
 	sort.Slice(diffs, func(i, j int) bool {
@@ -50,7 +56,7 @@ func formatOutputPlain(diffs []parsers.Diff, path string) string {
 			case !diff.OldIsMap && diff.NewIsMap:
 				out += fmt.Sprintf("Property '%s' was updated. From %s to [complex value]\n", pathKey, oldKey)
 			default:
-				out += formatOutputPlain(diff.DiffChild, pathKey)
+				out += formatDiffChildPlain(diff.DiffChild, pathKey)
 			}
 		case parsers.Added:
 			if !diff.OldIsMap && !diff.NewIsMap {
@@ -61,9 +67,6 @@ func formatOutputPlain(diffs []parsers.Diff, path string) string {
 		case parsers.Removed:
 			out += fmt.Sprintf("Property '%s' was removed\n", pathKey)
 		}
-	}
-	if path == "" {
-		out = strings.TrimSuffix(out, "\n")
 	}
 	return out
 }

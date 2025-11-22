@@ -34,28 +34,32 @@ type Diff struct {
 
 // Парсинг конфигов, преобразование их в виде map[string]any
 // Затем получение списка изменений []Diffs
-func ParseConfigs(pathBefore string, pathAfter string) ([]Diff, error) {
-	var diffs []Diff
+func ParseConfigs(pathBefore string, pathAfter string) (Diff, error) {
+	diff := Diff{
+		State:    Root,
+		Key:      "",
+		NewIsMap: true,
+	}
 	cfgBefore, err := parseConfig(pathBefore)
 	if err != nil {
-		return diffs, err
+		return diff, err
 	}
 	cfgAfter, err := parseConfig(pathAfter)
 	if err != nil {
-		return diffs, err
+		return diff, err
 	}
 	mapBefore, ok := cfgBefore.(map[string]any)
 	if !ok {
 		err := fmt.Errorf("something wrong with config %s", pathBefore)
-		return diffs, err
+		return diff, err
 	}
 	mapAfter, ok := cfgAfter.(map[string]any)
 	if !ok {
 		err := fmt.Errorf("something wrong with config %s", pathAfter)
-		return diffs, err
+		return diff, err
 	}
-	diffs = diffFromMaps(mapBefore, mapAfter)
-	return diffs, nil
+	diff.DiffChild = diffFromMaps(mapBefore, mapAfter)
+	return diff, nil
 }
 
 // Преобразование конфига

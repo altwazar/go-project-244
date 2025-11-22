@@ -2,15 +2,15 @@ package formatters
 
 import "code/parsers"
 
-func FormatOut(diffs []parsers.Diff, format string) string {
+func FormatOut(diff parsers.Diff, format string) string {
 	var out string
 	switch format {
 	case "stylish":
-		out = formatOutputStylish(diffs, 0)
+		out = formatOutputStylish(diff)
 	case "plain":
-		out = formatOutputPlain(diffs, "")
+		out = formatOutputPlain(diff)
 	case "json":
-		out = formatOutputJson(diffs)
+		out = formatOutputJson(diff)
 	}
 	return out
 }

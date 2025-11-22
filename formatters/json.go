@@ -9,14 +9,8 @@ import (
 
 // Рекурсивное формирование json вывода
 // noDiff - для обработки вывода вложенной структуры без сравнения
-func formatOutputJson(diffs []parsers.Diff) string {
+func formatOutputJson(rootDiff parsers.Diff) string {
 	var out string
-	rootDiff := parsers.Diff{
-		Key:       "",
-		State:     parsers.Root,
-		NewIsMap:  true,
-		DiffChild: diffs,
-	}
 	// Строка отступ
 	spacing := strings.Repeat(" ", 2)
 	// закрытие списка после вывода самого списка диффов

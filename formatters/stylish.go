@@ -7,8 +7,15 @@ import (
 	"strings"
 )
 
+func formatOutputStylish(rootDiff parsers.Diff) string {
+	var out string
+	out += formatDiffChildStylish(rootDiff.DiffChild, 0)
+	out = strings.TrimSuffix(out, "\n")
+	return out
+}
+
 // Рекурсивный разбор дифов
-func formatOutputStylish(diffs []parsers.Diff, level int) string {
+func formatDiffChildStylish(diffs []parsers.Diff, level int) string {
 	var out string
 	// Формирование отступов
 	spacing_braces := strings.Repeat(" ", (level * 4))
@@ -39,7 +46,7 @@ func formatOutputStylish(diffs []parsers.Diff, level int) string {
 			if !diff.OldIsMap && !diff.NewIsMap {
 				out += fmt.Sprintf("%s  %s: %s\n", spacing, diff.Key, newValue)
 			} else {
-				out += fmt.Sprintf("%s  %s: %s", spacing, diff.Key, formatOutputStylish(diff.DiffChild, level+1))
+				out += fmt.Sprintf("%s  %s: %s", spacing, diff.Key, formatDiffChildStylish(diff.DiffChild, level+1))
 			}
 		case parsers.Updated:
 			switch {
@@ -47,28 +54,28 @@ func formatOutputStylish(diffs []parsers.Diff, level int) string {
 				out += fmt.Sprintf("%s- %s: %s\n", spacing, diff.Key, oldValue)
 				out += fmt.Sprintf("%s+ %s: %s\n", spacing, diff.Key, newValue)
 			case diff.OldIsMap && !diff.NewIsMap:
-				out += fmt.Sprintf("%s- %s: %s", spacing, diff.Key, formatOutputStylish(diff.DiffChild, level+1))
+				out += fmt.Sprintf("%s- %s: %s", spacing, diff.Key, formatDiffChildStylish(diff.DiffChild, level+1))
 				out += fmt.Sprintf("%s+ %s: %s\n", spacing, diff.Key, newValue)
 			case !diff.OldIsMap && diff.NewIsMap:
 				out += fmt.Sprintf("%s- %s: %s\n", spacing, diff.Key, oldValue)
-				out += fmt.Sprintf("%s+ %s: %s", spacing, diff.Key, formatOutputStylish(diff.DiffChild, level+1))
+				out += fmt.Sprintf("%s+ %s: %s", spacing, diff.Key, formatDiffChildStylish(diff.DiffChild, level+1))
 			default:
-				out += fmt.Sprintf("%s  %s: %s", spacing, diff.Key, formatOutputStylish(diff.DiffChild, level+1))
+				out += fmt.Sprintf("%s  %s: %s", spacing, diff.Key, formatDiffChildStylish(diff.DiffChild, level+1))
 			}
 		case parsers.Added:
 			if !diff.OldIsMap && !diff.NewIsMap {
 				out += fmt.Sprintf("%s+ %s: %s\n", spacing, diff.Key, newValue)
 			} else {
-				out += fmt.Sprintf("%s+ %s: %s", spacing, diff.Key, formatOutputStylish(diff.DiffChild, level+1))
+				out += fmt.Sprintf("%s+ %s: %s", spacing, diff.Key, formatDiffChildStylish(diff.DiffChild, level+1))
 			}
 		case parsers.Removed:
 			if !diff.OldIsMap && !diff.NewIsMap {
 				out += fmt.Sprintf("%s- %s: %s\n", spacing, diff.Key, oldValue)
 			} else {
-				out += fmt.Sprintf("%s- %s: %s", spacing, diff.Key, formatOutputStylish(diff.DiffChild, level+1))
+				out += fmt.Sprintf("%s- %s: %s", spacing, diff.Key, formatDiffChildStylish(diff.DiffChild, level+1))
 			}
 		}
 	}
-	out += spacing_braces + "}"
+	out += spacing_braces + "}\n"
 	return out
 }

@@ -8,10 +8,10 @@ import (
 // Сравнение конфигов, получаю diffs из конфигов и отдаю в форматер.
 func GenDiff(pathBefore string, pathAfter string, format string) (string, error) {
 	var out string
-	diffs, err := parsers.ParseConfigs(pathBefore, pathAfter)
+	diff, err := parsers.ParseConfigs(pathBefore, pathAfter)
 	if err != nil {
 		return "", err
 	}
-	out = formatters.FormatOut(diffs, format)
+	out = formatters.FormatOut(diff, format)
 	return out, nil
 }
