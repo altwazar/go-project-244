@@ -21,7 +21,7 @@ func formatOutputJson(diffs []parsers.Diff) string {
 	spacing := strings.Repeat(" ", 2)
 	// закрытие списка после вывода самого списка диффов
 	out += formatDiff(rootDiff, 0, spacing)
-	out = strings.TrimSuffix(out, ",\n") + "\n"
+	out = strings.TrimSuffix(out, ",\n")
 	return out
 }
 

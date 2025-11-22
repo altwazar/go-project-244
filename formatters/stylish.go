@@ -69,6 +69,6 @@ func formatOutputStylish(diffs []parsers.Diff, level int) string {
 			}
 		}
 	}
-	out += spacing_braces + "}\n"
+	out += spacing_braces + "}"
 	return out
 }

@@ -63,7 +63,7 @@ func formatOutputPlain(diffs []parsers.Diff, path string) string {
 		}
 	}
 	if path == "" {
-		out = strings.TrimPrefix(out, "\n")
+		out = strings.TrimSuffix(out, "\n")
 	}
 	return out
 }
