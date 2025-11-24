@@ -36,7 +36,7 @@ func main() {
 				if err != nil {
 					log.Fatal(err)
 				}
-				return cli.Exit("Error: requires two argumenst - path1 and path2 to files", 1)
+				return cli.Exit("Error: requires two arguments - path1 and path2 to files", 1)
 			}
 			pathBefore := cmd.Args().Get(0)
 			pathAfter := cmd.Args().Get(1)
