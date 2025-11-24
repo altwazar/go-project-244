@@ -1,3 +1,5 @@
+// gendiff is a command-line tool for generating differences between two files.
+// It supports various formats including JSON, YAML, and plain text output.
 package main
 
 import (

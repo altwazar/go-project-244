@@ -65,18 +65,18 @@ func ParseConfigs(pathBefore string, pathAfter string) (Diff, error) {
 // Преобразование конфига
 func parseConfig(path string) (any, error) {
 	var cnf any
-	if strings.HasSuffix(path, ".json") {
-		err := ParseJsonConfig(path, &cnf)
-		if err != nil {
-			return nil, err
-		}
-	} else if strings.HasSuffix(path, ".yml") {
-		err := ParseYamlConfig(path, &cnf)
-		if err != nil {
-			return nil, err
-		}
-	} else {
-		err := fmt.Errorf("unknown file format %s", path)
+	var err error
+
+	switch {
+	case strings.HasSuffix(path, ".json"):
+		err = ParseJsonConfig(path, &cnf)
+	case strings.HasSuffix(path, ".yml"):
+		err = ParseYamlConfig(path, &cnf)
+	default:
+		err = fmt.Errorf("unknown file format %s", path)
+	}
+
+	if err != nil {
 		return nil, err
 	}
 	return cnf, nil
@@ -149,27 +149,32 @@ func compareValues(old map[string]any, new map[string]any, key string) Diff {
 	// Получение значений из ключей
 	newValue, newExists := new[key]
 	oldValue, oldExists := old[key]
+
 	state := Equal
 	diffChild := []Diff{}
+
 	// Получение статусов изменения значений ключа
-	if newExists && oldExists {
+	switch {
+	case newExists && oldExists:
 		if !reflect.DeepEqual(newValue, oldValue) {
 			state = Updated
 		}
-	} else if newExists {
+	case newExists:
 		state = Added
-	} else {
+	default:
 		state = Removed
 	}
+
 	// Обработка случаев, когда одно из значений является вложенной структурой
-	// Вложенная структура хранится в виде []Diff в diffChild
-	if newIsMap && oldIsMap {
+	switch {
+	case newIsMap && oldIsMap:
 		diffChild = diffFromMaps(oldMap, newMap)
-	} else if newIsMap {
+	case newIsMap:
 		diffChild = diffFromMaps(newMap, newMap)
-	} else if oldIsMap {
+	case oldIsMap:
 		diffChild = diffFromMaps(oldMap, oldMap)
 	}
+
 	// это попадет в массив diffs функции diffFromMaps
 	return Diff{
 		State:     state,
