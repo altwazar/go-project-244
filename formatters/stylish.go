@@ -23,7 +23,7 @@ func formatOutputStylish(rootDiff parsers.Diff) string {
 func formatDiffChildStylish(diffs []parsers.Diff, level int) string {
 	var out string
 	// Формирование отступов
-	spacing_braces := strings.Repeat(" ", (level * indentSize))
+	spacingBraces := strings.Repeat(" ", (level * indentSize))
 	spacing := strings.Repeat(" ", (level+1)*indentSize-prefixSize)
 
 	out += "{\n"
@@ -81,6 +81,6 @@ func formatDiffChildStylish(diffs []parsers.Diff, level int) string {
 			}
 		}
 	}
-	out += spacing_braces + "}\n"
+	out += spacingBraces + "}\n"
 	return out
 }
