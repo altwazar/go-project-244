@@ -8,33 +8,28 @@ import (
 )
 
 // Рекурсивное формирование json вывода
-// noDiff - для обработки вывода вложенной структуры без сравнения
-func formatOutputJson(rootDiff parsers.Diff) string {
-	var out string
-	// Строка отступ
+func formatOutputJSON(rootDiff parsers.Diff) string {
 	spacing := strings.Repeat(" ", 2)
-	// закрытие списка после вывода самого списка диффов
-	out += formatDiff(rootDiff, 0, spacing)
+	out := formatDiff(rootDiff, 0, spacing)
 	out = strings.TrimSuffix(out, ",\n")
 	return out
 }
 
 // Обработка списка диффов
 func diffRange(diffs []parsers.Diff, level int, spacing string, noDiff bool) string {
-	// Сортировка ключей
 	sort.Slice(diffs, func(i, j int) bool {
 		return diffs[i].Key < diffs[j].Key
 	})
+
 	var out string
 	for _, diff := range diffs {
-		// Кроме нулевого уровня отступы меняются в функциях вывода
 		if noDiff {
 			out += formatNoDiff(diff, level, spacing)
 		} else {
 			out += formatDiff(diff, level, spacing)
 		}
 	}
-	// Удаляется запятая в конце перечислений
+
 	out = strings.TrimSuffix(out, ",\n") + "\n"
 	if !noDiff {
 		out += strings.Repeat(spacing, level-1) + "]"
@@ -44,123 +39,169 @@ func diffRange(diffs []parsers.Diff, level int, spacing string, noDiff bool) str
 
 // Формирование вывода различий
 func formatDiff(diff parsers.Diff, level int, spacing string) string {
-	// У ключей и скобочек разный отступ
-	spacingBraces := strings.Repeat(spacing, level)
-	spacingKeys := strings.Repeat(spacing, level+1)
+	builder := &diffBuilder{
+		diff:          diff,
+		level:         level,
+		spacing:       spacing,
+		spacingBraces: strings.Repeat(spacing, level),
+		spacingKeys:   strings.Repeat(spacing, level+1),
+	}
+
+	return builder.build()
+}
+
+type diffBuilder struct {
+	diff          parsers.Diff
+	level         int
+	spacing       string
+	spacingBraces string
+	spacingKeys   string
+}
+
+func (b *diffBuilder) build() string {
+	state := b.getState()
+
 	var out string
-	var newValue string
-	var oldValue string
-	var state string
-	// Преобразование значений в нужную строку для вывода
-	if diff.New == nil {
-		newValue = "null"
-	} else if isString(diff.New) {
-		newValue = fmt.Sprintf("\"%v\"", diff.New)
-	} else {
-		newValue = fmt.Sprintf("%v", diff.New)
-	}
-	if diff.Old == nil {
-		oldValue = "null"
-	} else if isString(diff.Old) {
-		oldValue = fmt.Sprintf("\"%v\"", diff.Old)
-	} else {
-		oldValue = fmt.Sprintf("%v", diff.Old)
-	}
-	// Преобразование статуса сравнения в нужный вывод
-	switch diff.State {
+	out += b.spacingBraces + "{\n"
+	out += fmt.Sprintf("%s\"key\": \"%s\",\n", b.spacingKeys, b.diff.Key)
+	out += fmt.Sprintf("%s\"type\": \"%s\",\n", b.spacingKeys, state)
+	out += b.buildValueSection(state)
+	out = strings.TrimSuffix(out, ",\n") + "\n"
+	out += b.spacingBraces + "},\n"
+
+	return out
+}
+
+func (b *diffBuilder) getState() string {
+	switch b.diff.State {
 	case parsers.Updated:
-		if diff.OldIsMap && diff.NewIsMap {
-			state = "nested"
-		} else {
-			state = "changed"
+		if b.diff.OldIsMap && b.diff.NewIsMap {
+			return "nested"
 		}
+		return "changed"
 	case parsers.Added:
-		state = "added"
+		return "added"
 	case parsers.Removed:
-		state = "deleted"
+		return "deleted"
 	case parsers.Equal:
-		state = "unchanged"
+		return "unchanged"
 	case parsers.Root:
-		state = "root"
+		return "root"
+	default:
+		return "unknown"
 	}
-	// Начальная скобочка и фиксированные поля key и type
-	out += spacingBraces + "{\n"
-	out += fmt.Sprintf("%s\"key\": \"%s\",\n", spacingKeys, diff.Key)
-	out += fmt.Sprintf("%s\"type\": \"%s\",\n", spacingKeys, state)
-	// Формирование вывода в зависимости от статуса
-	// Если в качестве значения вложенная структура, то { на той же строке
-	// и уровень смещения увеличивается на 1
-	// Если Nested с разбором диффа, то на отдельный и уровень на 2
+}
+
+func (b *diffBuilder) buildValueSection(state string) string {
 	switch state {
 	case "unchanged":
-		if !diff.OldIsMap {
-			out += fmt.Sprintf("%s\"value1\": %v,\n", spacingKeys, oldValue)
-		} else {
-			out += fmt.Sprintf("%s\"value1\": {\n%s\n%s},\n",
-				spacingKeys,
-				diffRange(diff.DiffChild, level+1, spacing, true),
-				spacingKeys)
-		}
+		return b.buildUnchangedValue()
 	case "changed":
-		switch {
-		case !diff.OldIsMap && !diff.NewIsMap:
-			if diff.Old != nil {
-				out += fmt.Sprintf("%s\"value1\": %v,\n", spacingKeys, oldValue)
-			}
-			if diff.New != nil {
-				out += fmt.Sprintf("%s\"value2\": %v,\n", spacingKeys, newValue)
-			}
-		case diff.OldIsMap && !diff.NewIsMap:
-			out += fmt.Sprintf("%s\"value1\": {\n%s%s},\n", spacingKeys,
-				diffRange(diff.DiffChild, level+1, spacing, true), spacingKeys)
-			if diff.New != nil {
-				out += fmt.Sprintf("%s\"value2\": %v,\n", spacingKeys, newValue)
-			}
-		case !diff.OldIsMap && diff.NewIsMap:
-			if diff.Old != nil {
-				out += fmt.Sprintf("%s\"value1\": %v,\n", spacingKeys, oldValue)
-			}
-			out += fmt.Sprintf("%s\"value2\": {\n%s%s},\n", spacingKeys,
-				diffRange(diff.DiffChild, level+1, spacing, true), spacingKeys)
-		}
+		return b.buildChangedValue()
 	case "nested", "root":
-		out += fmt.Sprintf("%s\"children\": [\n%s,\n", spacingKeys,
-			diffRange(diff.DiffChild, level+2, spacing, false))
+		return b.buildNestedValue()
 	case "added":
-		if !diff.NewIsMap {
-			out += fmt.Sprintf("%s\"value2\": %v,\n", spacingKeys, newValue)
-		} else {
-			out += fmt.Sprintf("%s\"value2\": {\n%s%s},\n", spacingKeys,
-				diffRange(diff.DiffChild, level+1, spacing, true), spacingKeys)
-		}
+		return b.buildAddedValue()
 	case "deleted":
-		if !diff.OldIsMap {
-			out += fmt.Sprintf("%s\"value1\": %v,\n", spacingKeys, oldValue)
-		} else {
-			out += fmt.Sprintf("%s\"value1\": {\n%s%s},\n",
-				spacingKeys,
-				diffRange(diff.DiffChild, level+1, spacing, true),
-				spacingKeys)
-		}
+		return b.buildDeletedValue()
+	default:
+		return ""
 	}
-	out = strings.TrimSuffix(out, ",\n") + "\n"
-	out += spacingBraces + "},\n"
+}
+
+func (b *diffBuilder) buildUnchangedValue() string {
+	if !b.diff.OldIsMap {
+		return fmt.Sprintf("%s\"value1\": %v,\n", b.spacingKeys, b.formatValue(b.diff.Old))
+	}
+	return fmt.Sprintf("%s\"value1\": {\n%s\n%s},\n",
+		b.spacingKeys,
+		diffRange(b.diff.DiffChild, b.level+1, b.spacing, true),
+		b.spacingKeys)
+}
+
+func (b *diffBuilder) buildChangedValue() string {
+	var out string
+
+	switch {
+	case !b.diff.OldIsMap && !b.diff.NewIsMap:
+		out += b.buildOldValueIfExists()
+		out += b.buildNewValueIfExists()
+	case b.diff.OldIsMap && !b.diff.NewIsMap:
+		out += b.buildOldMapValue()
+		out += b.buildNewValueIfExists()
+	case !b.diff.OldIsMap && b.diff.NewIsMap:
+		out += b.buildOldValueIfExists()
+		out += b.buildNewMapValue()
+	}
+
 	return out
+}
+
+func (b *diffBuilder) buildNestedValue() string {
+	return fmt.Sprintf("%s\"children\": [\n%s,\n", b.spacingKeys,
+		diffRange(b.diff.DiffChild, b.level+2, b.spacing, false))
+}
+
+func (b *diffBuilder) buildAddedValue() string {
+	if !b.diff.NewIsMap {
+		return fmt.Sprintf("%s\"value2\": %v,\n", b.spacingKeys, b.formatValue(b.diff.New))
+	}
+	return fmt.Sprintf("%s\"value2\": {\n%s%s},\n", b.spacingKeys,
+		diffRange(b.diff.DiffChild, b.level+1, b.spacing, true), b.spacingKeys)
+}
+
+func (b *diffBuilder) buildDeletedValue() string {
+	if !b.diff.OldIsMap {
+		return fmt.Sprintf("%s\"value1\": %v,\n", b.spacingKeys, b.formatValue(b.diff.Old))
+	}
+	return fmt.Sprintf("%s\"value1\": {\n%s%s},\n",
+		b.spacingKeys,
+		diffRange(b.diff.DiffChild, b.level+1, b.spacing, true),
+		b.spacingKeys)
+}
+
+func (b *diffBuilder) buildOldValueIfExists() string {
+	if b.diff.Old != nil {
+		return fmt.Sprintf("%s\"value1\": %v,\n", b.spacingKeys, b.formatValue(b.diff.Old))
+	}
+	return ""
+}
+
+func (b *diffBuilder) buildNewValueIfExists() string {
+	if b.diff.New != nil {
+		return fmt.Sprintf("%s\"value2\": %v,\n", b.spacingKeys, b.formatValue(b.diff.New))
+	}
+	return ""
+}
+
+func (b *diffBuilder) buildOldMapValue() string {
+	return fmt.Sprintf("%s\"value1\": {\n%s%s},\n", b.spacingKeys,
+		diffRange(b.diff.DiffChild, b.level+1, b.spacing, true), b.spacingKeys)
+}
+
+func (b *diffBuilder) buildNewMapValue() string {
+	return fmt.Sprintf("%s\"value2\": {\n%s%s},\n", b.spacingKeys,
+		diffRange(b.diff.DiffChild, b.level+1, b.spacing, true), b.spacingKeys)
+}
+
+func (b *diffBuilder) formatValue(value interface{}) string {
+	if value == nil {
+		return "null"
+	}
+	if isString(value) {
+		return fmt.Sprintf("\"%v\"", value)
+	}
+	return fmt.Sprintf("%v", value)
 }
 
 func formatNoDiff(diff parsers.Diff, level int, spacing string) string {
 	spacingKeys := strings.Repeat(spacing, level+1)
 	var out string
-	var newValue string
-	if diff.New == nil {
-		newValue = "null"
-	} else if isString(diff.New) {
-		newValue = fmt.Sprintf("\"%v\"", diff.New)
-	} else {
-		newValue = fmt.Sprintf("%v", diff.New)
-	}
+
+	formattedValue := formatSimpleValue(diff.New)
+
 	if !diff.NewIsMap {
-		out += fmt.Sprintf("%s\"%s\": %v,\n", spacingKeys, diff.Key, newValue)
+		out += fmt.Sprintf("%s\"%s\": %v,\n", spacingKeys, diff.Key, formattedValue)
 	} else {
 		out += fmt.Sprintf("%s\"%s\": {\n%s%s},\n",
 			spacingKeys,
@@ -169,4 +210,14 @@ func formatNoDiff(diff parsers.Diff, level int, spacing string) string {
 			spacingKeys)
 	}
 	return out
+}
+
+func formatSimpleValue(value interface{}) string {
+	if value == nil {
+		return "null"
+	}
+	if isString(value) {
+		return fmt.Sprintf("\"%v\"", value)
+	}
+	return fmt.Sprintf("%v", value)
 }

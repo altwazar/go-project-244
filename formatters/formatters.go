@@ -10,7 +10,7 @@ func FormatOut(diff parsers.Diff, format string) string {
 	case "plain":
 		out = formatOutputPlain(diff)
 	case "json":
-		out = formatOutputJson(diff)
+		out = formatOutputJSON(diff)
 	}
 	return out
 }
