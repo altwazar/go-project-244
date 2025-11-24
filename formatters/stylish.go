@@ -13,74 +13,126 @@ const (
 )
 
 func formatOutputStylish(rootDiff parsers.Diff) string {
-	var out string
-	out += formatDiffChildStylish(rootDiff.DiffChild, 0)
-	out = strings.TrimSuffix(out, "\n")
-	return out
+	out := formatDiffChildStylish(rootDiff.DiffChild, 0)
+	return strings.TrimSuffix(out, "\n")
 }
 
 // Рекурсивный разбор дифов
 func formatDiffChildStylish(diffs []parsers.Diff, level int) string {
-	var out string
-	// Формирование отступов
-	spacingBraces := strings.Repeat(" ", (level * indentSize))
-	spacing := strings.Repeat(" ", (level+1)*indentSize-prefixSize)
-
-	out += "{\n"
-	// Сортировка по ключам
-	sort.Slice(diffs, func(i, j int) bool {
-		return diffs[i].Key < diffs[j].Key
-	})
-	// Значения ключей в нужном формате
-	var newValue string
-	var oldValue string
-	for _, diff := range diffs {
-		if diff.New == nil {
-			newValue = "null"
-		} else {
-			newValue = fmt.Sprintf("%v", diff.New)
-		}
-		if diff.Old == nil {
-			oldValue = "null"
-		} else {
-			oldValue = fmt.Sprintf("%v", diff.Old)
-		}
-		// Формирование тела вывода, для вложенных структур рекурсивно вызывается эта же функция
-		switch diff.State {
-		case parsers.Equal:
-			if !diff.OldIsMap && !diff.NewIsMap {
-				out += fmt.Sprintf("%s  %s: %s\n", spacing, diff.Key, newValue)
-			} else {
-				out += fmt.Sprintf("%s  %s: %s", spacing, diff.Key, formatDiffChildStylish(diff.DiffChild, level+1))
-			}
-		case parsers.Updated:
-			switch {
-			case !diff.OldIsMap && !diff.NewIsMap:
-				out += fmt.Sprintf("%s- %s: %s\n", spacing, diff.Key, oldValue)
-				out += fmt.Sprintf("%s+ %s: %s\n", spacing, diff.Key, newValue)
-			case diff.OldIsMap && !diff.NewIsMap:
-				out += fmt.Sprintf("%s- %s: %s", spacing, diff.Key, formatDiffChildStylish(diff.DiffChild, level+1))
-				out += fmt.Sprintf("%s+ %s: %s\n", spacing, diff.Key, newValue)
-			case !diff.OldIsMap && diff.NewIsMap:
-				out += fmt.Sprintf("%s- %s: %s\n", spacing, diff.Key, oldValue)
-				out += fmt.Sprintf("%s+ %s: %s", spacing, diff.Key, formatDiffChildStylish(diff.DiffChild, level+1))
-			default:
-				out += fmt.Sprintf("%s  %s: %s", spacing, diff.Key, formatDiffChildStylish(diff.DiffChild, level+1))
-			}
-		case parsers.Added:
-			if !diff.OldIsMap && !diff.NewIsMap {
-				out += fmt.Sprintf("%s+ %s: %s\n", spacing, diff.Key, newValue)
-			} else {
-				out += fmt.Sprintf("%s+ %s: %s", spacing, diff.Key, formatDiffChildStylish(diff.DiffChild, level+1))
-			}
-		case parsers.Removed:
-			if !diff.OldIsMap && !diff.NewIsMap {
-				out += fmt.Sprintf("%s- %s: %s\n", spacing, diff.Key, oldValue)
-			} else {
-				out += fmt.Sprintf("%s- %s: %s", spacing, diff.Key, formatDiffChildStylish(diff.DiffChild, level+1))
-			}
-		}
+	builder := &stylishBuilder{
+		level: level,
+		diffs: diffs,
 	}
+	return builder.build()
+}
+
+type stylishBuilder struct {
+	level int
+	diffs []parsers.Diff
+}
+
+func (b *stylishBuilder) build() string {
+	spacingBraces := strings.Repeat(" ", (b.level * indentSize))
+	spacing := strings.Repeat(" ", (b.level+1)*indentSize-prefixSize)
+
+	var out string
+	out += "{\n"
+
+	b.sortDiffs()
+	out += b.buildDiffLines(spacing)
 	out += spacingBraces + "}\n"
+
 	return out
+}
+
+func (b *stylishBuilder) sortDiffs() {
+	sort.Slice(b.diffs, func(i, j int) bool {
+		return b.diffs[i].Key < b.diffs[j].Key
+	})
+}
+
+func (b *stylishBuilder) buildDiffLines(spacing string) string {
+	var out string
+	for _, diff := range b.diffs {
+		out += b.buildDiffLine(diff, spacing)
+	}
+	return out
+}
+
+func (b *stylishBuilder) buildDiffLine(diff parsers.Diff, spacing string) string {
+	switch diff.State {
+	case parsers.Equal:
+		return b.buildEqualLine(diff, spacing)
+	case parsers.Updated:
+		return b.buildUpdatedLine(diff, spacing)
+	case parsers.Added:
+		return b.buildAddedLine(diff, spacing)
+	case parsers.Removed:
+		return b.buildRemovedLine(diff, spacing)
+	default:
+		return ""
+	}
+}
+
+func (b *stylishBuilder) buildEqualLine(diff parsers.Diff, spacing string) string {
+	if !diff.OldIsMap && !diff.NewIsMap {
+		return fmt.Sprintf("%s  %s: %s\n", spacing, diff.Key, b.formatValue(diff.New))
+	}
+	return fmt.Sprintf("%s  %s: %s", spacing, diff.Key, formatDiffChildStylish(diff.DiffChild, b.level+1))
+}
+
+func (b *stylishBuilder) buildUpdatedLine(diff parsers.Diff, spacing string) string {
+	switch {
+	case !diff.OldIsMap && !diff.NewIsMap:
+		return b.buildSimpleUpdated(diff, spacing)
+	case diff.OldIsMap && !diff.NewIsMap:
+		return b.buildMapToSimpleUpdated(diff, spacing)
+	case !diff.OldIsMap && diff.NewIsMap:
+		return b.buildSimpleToMapUpdated(diff, spacing)
+	default:
+		return b.buildNestedUpdated(diff, spacing)
+	}
+}
+
+func (b *stylishBuilder) buildSimpleUpdated(diff parsers.Diff, spacing string) string {
+	return fmt.Sprintf("%s- %s: %s\n%s+ %s: %s\n",
+		spacing, diff.Key, b.formatValue(diff.Old),
+		spacing, diff.Key, b.formatValue(diff.New))
+}
+
+func (b *stylishBuilder) buildMapToSimpleUpdated(diff parsers.Diff, spacing string) string {
+	return fmt.Sprintf("%s- %s: %s%s+ %s: %s\n",
+		spacing, diff.Key, formatDiffChildStylish(diff.DiffChild, b.level+1),
+		spacing, diff.Key, b.formatValue(diff.New))
+}
+
+func (b *stylishBuilder) buildSimpleToMapUpdated(diff parsers.Diff, spacing string) string {
+	return fmt.Sprintf("%s- %s: %s\n%s+ %s: %s",
+		spacing, diff.Key, b.formatValue(diff.Old),
+		spacing, diff.Key, formatDiffChildStylish(diff.DiffChild, b.level+1))
+}
+
+func (b *stylishBuilder) buildNestedUpdated(diff parsers.Diff, spacing string) string {
+	return fmt.Sprintf("%s  %s: %s", spacing, diff.Key, formatDiffChildStylish(diff.DiffChild, b.level+1))
+}
+
+func (b *stylishBuilder) buildAddedLine(diff parsers.Diff, spacing string) string {
+	if !diff.OldIsMap && !diff.NewIsMap {
+		return fmt.Sprintf("%s+ %s: %s\n", spacing, diff.Key, b.formatValue(diff.New))
+	}
+	return fmt.Sprintf("%s+ %s: %s", spacing, diff.Key, formatDiffChildStylish(diff.DiffChild, b.level+1))
+}
+
+func (b *stylishBuilder) buildRemovedLine(diff parsers.Diff, spacing string) string {
+	if !diff.OldIsMap && !diff.NewIsMap {
+		return fmt.Sprintf("%s- %s: %s\n", spacing, diff.Key, b.formatValue(diff.Old))
+	}
+	return fmt.Sprintf("%s- %s: %s", spacing, diff.Key, formatDiffChildStylish(diff.DiffChild, b.level+1))
+}
+
+func (b *stylishBuilder) formatValue(value interface{}) string {
+	if value == nil {
+		return "null"
+	}
+	return fmt.Sprintf("%v", value)
 }
