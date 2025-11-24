@@ -7,6 +7,11 @@ import (
 	"strings"
 )
 
+const (
+	indentSize = 4
+	prefixSize = 2
+)
+
 func formatOutputStylish(rootDiff parsers.Diff) string {
 	var out string
 	out += formatDiffChildStylish(rootDiff.DiffChild, 0)
@@ -18,8 +23,8 @@ func formatOutputStylish(rootDiff parsers.Diff) string {
 func formatDiffChildStylish(diffs []parsers.Diff, level int) string {
 	var out string
 	// Формирование отступов
-	spacing_braces := strings.Repeat(" ", (level * 4))
-	spacing := strings.Repeat(" ", (level+1)*4-2)
+	spacing_braces := strings.Repeat(" ", (level * indentSize))
+	spacing := strings.Repeat(" ", (level+1)*indentSize-prefixSize)
 
 	out += "{\n"
 	// Сортировка по ключам
