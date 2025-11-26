@@ -187,9 +187,9 @@ func compareValues(old map[string]any, new map[string]any, key string) Diff {
 	case newIsMap && oldIsMap:
 		diffChild = diffFromMaps(oldMap, newMap)
 	case newIsMap:
-		diffChild = diffFromMaps(newMap, newMap)
+		diffChild = diffFromMap(newMap)
 	case oldIsMap:
-		diffChild = diffFromMaps(oldMap, oldMap)
+		diffChild = diffFromMap(oldMap)
 	}
 
 	// это попадет в массив diffs функции diffFromMaps
