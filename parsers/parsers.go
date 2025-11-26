@@ -142,6 +142,22 @@ func diffFromMaps(a map[string]any, b map[string]any) []Diff {
 	return diffs
 }
 
+// Для случая, когда сравнивать ничего не надо и нужен просто Diff
+func diffFromMap(a map[string]any) []Diff {
+	// в diffs попадают результаты сравнения
+	var diffs []Diff
+	// Список ключей в двух мапах
+	uniqueKeys := make(map[string]bool)
+	for key := range a {
+		uniqueKeys[key] = true
+	}
+	// Сравнение по полученному списку ключей
+	for key := range uniqueKeys {
+		diffs = append(diffs, parseMapValue(a, key))
+	}
+	return diffs
+}
+
 // Сравнение двух значений в мапах
 func compareValues(old map[string]any, new map[string]any, key string) Diff {
 	// Получение потенциальных map из ключей
@@ -184,6 +200,30 @@ func compareValues(old map[string]any, new map[string]any, key string) Diff {
 		Key:       key,
 		Old:       oldValue,
 		New:       newValue,
+		DiffChild: diffChild,
+	}
+}
+
+func parseMapValue(m map[string]any, key string) Diff {
+	// Получение потенциальных map из ключей
+	valueMap, valueIsMap := m[key].(map[string]any)
+	// Получение значений из ключей
+	value := m[key]
+
+	state := Equal
+	diffChild := []Diff{}
+
+	if valueIsMap {
+		diffChild = diffFromMap(valueMap)
+	}
+	// это попадет в массив diffs функции diffFromMaps
+	return Diff{
+		State:     state,
+		NewIsMap:  valueIsMap,
+		OldIsMap:  valueIsMap,
+		Key:       key,
+		Old:       value,
+		New:       value,
 		DiffChild: diffChild,
 	}
 }
