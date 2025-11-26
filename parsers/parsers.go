@@ -3,7 +3,6 @@ package parsers
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"os"
 	"reflect"
 	"strings"
@@ -83,14 +82,15 @@ func parseConfig(path string) (any, error) {
 }
 
 // Преобразование JSON
-func ParseJsonConfig(path string, cnf *any) error {
+func ParseJsonConfig(path string, cnf *any) (err error) {
 	f, err := os.Open(path)
 	if err != nil {
 		return fmt.Errorf("open: %w", err)
 	}
 	defer func() {
-		if err := f.Close(); err != nil {
-			log.Printf("warning: failed to close file: %v", err)
+		closeErr := f.Close()
+		if err == nil && closeErr != nil {
+			err = fmt.Errorf("close: %w", closeErr)
 		}
 	}()
 	dec := json.NewDecoder(f)
@@ -102,14 +102,15 @@ func ParseJsonConfig(path string, cnf *any) error {
 }
 
 // Преобразование Yaml
-func ParseYamlConfig(path string, cnf *any) error {
+func ParseYamlConfig(path string, cnf *any) (err error) {
 	f, err := os.Open(path)
 	if err != nil {
 		return fmt.Errorf("open: %w", err)
 	}
 	defer func() {
-		if err := f.Close(); err != nil {
-			log.Printf("warning: failed to close file: %v", err)
+		closeErr := f.Close()
+		if err == nil && closeErr != nil {
+			err = fmt.Errorf("close: %w", closeErr)
 		}
 	}()
 	dec := yaml.NewDecoder(f)
